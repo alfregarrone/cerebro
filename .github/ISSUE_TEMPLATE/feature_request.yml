@@ -1,0 +1,22 @@
+name: Proponer algo
+description: Una función nueva o una mejora
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: Qué problema resolvería
+      description: Contá el caso real, no la solución que imaginaste.
+    validations:
+      required: true
+
+  - type: textarea
+    id: propuesta
+    attributes:
+      label: Cómo lo resolverías
+      description: Si ya tenés una idea de la API, escribila acá.
+
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Qué probaste hasta ahora

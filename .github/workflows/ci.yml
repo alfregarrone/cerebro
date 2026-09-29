@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compilar
+        run: python -m compileall -q lambda pc
+
+      - name: Lint
+        run: |
+          pip install -q ruff
+          ruff check --select E9,F63,F7,F82 lambda pc
+
+      - name: Validar el modelo de interacción
+        run: python -c "import json,sys; m=json.load(open('skill-package/interactionModels/custom/es-US.json'))['interactionModel']['languageModel']; print('invocación:', m['invocationName'], '| intents:', len(m['intents']))"
+
+      - name: Verificar que no haya secretos
+        run: |
+          ! grep -rEn "AIza[0-9A-Za-z_-]{20,}|AQ\.[0-9A-Za-z_-]{30,}|cerebro-[0-9a-f]{20}:[0-9a-f]{48}" --include=*.py --include=*.json --include=*.md . \
+            || { echo "Hay una clave real en el repo"; exit 1; }

@@ -1,0 +1,32 @@
+{
+  "manifest": {
+    "manifestVersion": "1.0",
+    "apis": {
+      "custom": {
+        "interfaces": [{ "type": "AUDIO_PLAYER" }],
+        "locales": {}
+      }
+    },
+    "permissions": [
+      { "name": "alexa::alerts:reminders:skill:readwrite" },
+      { "name": "alexa::alerts:timers:skill:readwrite" }
+    ],
+    "publishingInformation": {
+      "isAvailableWorldwide": true,
+      "locales": {
+        "es-US": {
+          "name": "Cerebro",
+          "summary": "Un cerebro con IA para tu Echo: memoria, recordatorios, datos de Argentina y tu PC por voz.",
+          "description": "Conversación con memoria permanente, recordatorios y temporizadores de Alexa, dólar, clima, fútbol, feriados e inflación en vivo, radio, y un puente cifrado con tu computadora para notas, WhatsApp, domótica y tareas.",
+          "examplePhrases": [
+            "Alexa, abrí cerebro",
+            "Alexa, preguntale a cerebro a cuánto está el dólar",
+            "Alexa, decile a cerebro que me recuerde en veinte minutos sacar la pizza"
+          ],
+          "keywords": ["asistente", "ia", "argentina", "recordatorios", "dolar"]
+        }
+      },
+      "testingInstructions": "Decir 'abrí cerebro' y probar: '¿a cuánto está el dólar?', 'poné dos minutos', 'recordame en cinco minutos tomar agua'. Los recordatorios piden aceptar el permiso en la app de Alexa la primera vez."
+    }
+  }
+}
