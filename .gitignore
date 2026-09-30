@@ -1,6 +1,18 @@
-# Secretos
+# Secretos y estado local
 lambda/config.py
-pc/config.json
+pc/config_pc.json
+pc/gemini_key.txt
+pc/estado.json
+pc/latido.txt
+pc/casa_dispositivos.json
+pc/frases.json
+pc/aprendido.json
+pc/memoria.json
+pc/programados.json
+pc/casa_apodos.json
+pc/capturas/
+pc/audios/
+pruebas/_copia_*/
 .env
 *.pem
 

@@ -2,7 +2,7 @@
 
 # Cerebro
 
-> Un cerebro con IA para tu Amazon Echo, en español rioplatense. Conversación con memoria, recordatorios y temporizadores de Alexa, datos de Argentina en vivo (dólar, clima, fútbol, feriados, inflación) y un puente cifrado con tu PC para notas, WhatsApp, domótica y tareas. Gratis: corre en Alexa-hosted y usa el nivel gratuito de Gemini.
+> Un cerebro con IA para tu Amazon Echo, en español rioplatense. Conversación con memoria, recordatorios y temporizadores de Alexa, datos de Argentina en vivo (dólar, clima, fútbol, feriados, inflación) y un puente firmado con tu PC para notas, WhatsApp, luces, agenda, mails, avisos por Telegram y tareas con Claude Code. Gratis: corre en Alexa-hosted y usa el nivel gratuito de Gemini.
 
 [![CI](https://github.com/alfregarrone/cerebro/actions/workflows/ci.yml/badge.svg)](https://github.com/alfregarrone/cerebro/actions)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -44,7 +44,8 @@ vivo de APIs públicas sin clave.
 | **Radio en el Echo** | "poné Mitre", "poné Rock and Pop", "pausá" |
 | **Resumen del día** | "buenos días" → hora, clima, dólar, agenda, pendientes y feriado cercano en una sola frase |
 | **Mandarte cosas al celular** | "pasame la receta al celular", "mandame esa lista" |
-| **Tu PC** *(con el agente instalado)* | "anotá que...", "¿qué tengo pendiente?", "abrí YouTube", "poné música", "apagá la compu", "mandale un WhatsApp a Juan que llego tarde", "¿tengo mails?", "prendé la luz del living", "sacá una captura", "pedile a Claude que arregle el bug del login" |
+| **Tu PC** *(con el agente instalado)* | "anotá que...", "¿qué tengo pendiente?", "abrí YouTube", "poné música de Soda Stereo", "apagá la compu", "mandale un WhatsApp a Juan que llego tarde", "¿qué tengo mañana?", "¿tengo mails?", "prendé la luz del living", "sacá una captura", "pedile a Claude que ordene mi carpeta de descargas", "fijate en Instagram si tengo mensajes" |
+| **Desde Telegram** *(con el agente)* | Lo mismo por escrito o nota de voz cuando no estás cerca del Echo, más el resumen de la mañana, avisos solos de dólar, lluvia, mails importantes y agenda, y los archivos que Claude genera |
 
 ## Cómo funciona
 
@@ -61,6 +62,11 @@ Echo ──► Alexa ──► Skill (Python, Alexa-hosted Lambda)
                        ├─ Datos en vivo: Open-Meteo, DolarApi, ArgentinaDatos, ESPN, Google News, CoinGecko…
                        │
                        └─ Puente con la PC ── ntfy.sh, mensajes firmados con HMAC ──► pc/cerebro_pc.py
+                                                                                       │
+                       Telegram (bot propio) ◄──── avisos, resumen de la mañana, órdenes ──┤
+                                                                                       │
+                          notas · apps · música · WhatsApp · luces · agenda · mails ◄──┤
+                          capturas · tareas de pantalla y de código con Claude Code ◄──┘
 ```
 
 Tres decisiones explican casi todo el diseño:
@@ -89,7 +95,8 @@ La guía completa está en **[docs/INSTALACION.md](docs/INSTALACION.md)**. En re
 2. Pegá el modelo de interacción de `skill-package/`, y el código de `lambda/`.
 3. Copiá `lambda/config.example.py` a `lambda/config.py` y poné tu clave gratuita de Gemini.
 4. Deploy. Decile "Alexa, abrí cerebro".
-5. *(Opcional)* Instalá `pc/cerebro_pc.py` en tu computadora para las acciones de PC.
+5. *(Opcional)* Copiá la carpeta `pc/` a tu computadora (Windows), completá `config_pc.json` y
+   ejecutá `instalar.bat`. Con un bot de Telegram, además, te avisa al celular y le podés escribir.
 
 Cómo hablarle, con todos los ejemplos: **[docs/USO.md](docs/USO.md)**.
 
@@ -101,7 +108,12 @@ lambda/                 código de la skill (Alexa-hosted, Python 3)
   config.example.py     plantilla de configuración (clave de Gemini, ciudad, zona horaria)
   requirements.txt
 skill-package/          manifiesto y modelo de interacción (es-US)
-pc/                     agente que corre en tu computadora
+pc/                     agente que corre en tu computadora (Windows)
+  cerebro_pc.py         escucha ntfy.sh y Telegram, valida la firma y ejecuta la lista cerrada de acciones
+  agenda.py · correo.py · casa.py · medios.py · whatsapp_app.py · escritorio.py · info.py
+  instalar.bat · instalar-extras.bat · configurar.bat · ACTUALIZAR.bat · desinstalar.bat
+  config.example.json   plantilla (enlace, Telegram, Gemini, calendario, Gmail, luces)
+pruebas/                baterías de prueba: skill entera con un Echo falso, bot de Telegram, agenda, mails, música
 docs/                   instalación y uso
 ```
 
@@ -117,6 +129,10 @@ docs/                   instalación y uso
 - **La búsqueda web está apagada** porque el grounding de Gemini no está disponible en el nivel
   gratuito. Los datos en vivo salen de APIs públicas específicas, que son más rápidas y confiables
   que una búsqueda genérica para lo que este bot necesita.
+- **El agente de PC no expone nada y no hace nada que no esté en una lista.** Escucha ntfy.sh y
+  Telegram con conexiones salientes, ejecuta solo las acciones de `ACCIONES`, y lo delicado
+  (WhatsApp, apagar, ejecutar un plan de Claude Code) pide "sí". Claude Code corre con
+  herramientas de solo lectura para consultar; para cambiar cosas, el plan pasa por tu celular.
 - **Limitaciones actuales:** un solo usuario por skill (la memoria no distingue voces), la
   vía rápida está pensada en castellano rioplatense y no reconoce todas las variantes, las radios
   dependen del directorio público Radio Browser, y el agente de PC está hecho para Windows.

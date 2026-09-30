@@ -1,0 +1,24 @@
+{
+  "cerebro_link": "",
+
+  "carpeta_notas": null,
+  "claude_exe": null,
+  "gemini_api_key": "",
+
+  "telegram_token": "",
+  "telegram_chat_id": null,
+
+  "calendario_ical": [],
+  "agenda_aviso_minutos": 30,
+  "gmail_usuario": "",
+  "gmail_clave_app": "",
+
+  "resumen_hora": "08:00",
+  "equipo": "",
+
+  "tplink_usuario": "",
+  "tplink_clave": "",
+  "casa_apodos": {},
+
+  "equipos_prohibidos": []
+}

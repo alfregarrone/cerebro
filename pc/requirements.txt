@@ -1,0 +1,11 @@
+# El agente base no necesita nada fuera de la biblioteca estándar de Python 3.11+.
+# Estas dependencias son para los extras (las instala instalar-extras.bat):
+pyautogui            # tareas de pantalla, WhatsApp de escritorio, capturas
+pillow
+pyperclip
+pygetwindow
+python-kasa          # enchufes y luces TP-Link (Kasa / Tapo)
+pywizlight           # luces WiZ
+icalendar            # agenda (Google Calendar por iCal)
+recurring-ical-events
+tzdata

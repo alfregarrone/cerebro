@@ -98,7 +98,9 @@ en la configuración del dispositivo.
 ## 6. El agente de PC *(opcional)*
 
 Habilita todo lo que involucra tu computadora: notas y pendientes, abrir apps y sitios, música,
-apagar o suspender, WhatsApp, domótica, capturas, mails, agenda y tareas con Claude Code.
+apagar o suspender, WhatsApp de escritorio, luces y enchufes, capturas, agenda, mails, avisos
+automáticos al celular y tareas con Claude Code. También te deja **manejar la PC desde Telegram**
+cuando no estás cerca del Echo. Está hecho para **Windows**.
 
 ### Cómo funciona el enlace
 
@@ -117,36 +119,85 @@ python -c "import secrets; print(f'cerebro-{secrets.token_hex(10)}:{secrets.toke
 Te da algo como `cerebro-9e36…:6053…`. Ese valor va en **dos** lugares:
 
 1. En `lambda/config.py` de la skill, en `CEREBRO_LINK = "..."`. Volvé a hacer **Deploy**.
-2. En la configuración del agente de PC, en el paso siguiente.
+2. En `config_pc.json` del agente, en `"cerebro_link"` (paso siguiente).
 
 ### Instalar el agente
 
-> **El agente todavía no está publicado en este repo.** La skill funciona completa sin él; ver
-> [`pc/README.md`](../pc/README.md) para el estado y el protocolo. Los pasos de abajo describen
-> cómo va a instalarse cuando esté disponible. Está hecho para **Windows**.
+1. Instalá Python 3.11 o más nuevo desde [python.org](https://www.python.org/downloads/windows/)
+   marcando **Add python.exe to PATH**.
+2. Copiá la carpeta [`pc/`](../pc) del repo a tu computadora, por ejemplo en `C:\Cerebro`. No la
+   dejes dentro de OneDrive ni en el Escritorio: son carpetas que Windows sincroniza y mueve.
+3. Copiá `config.example.json` a **`config_pc.json`** y completá:
 
-1. Instalá Python 3.11 o más nuevo desde [python.org](https://www.python.org/downloads/)
-   (marcá *Add python to PATH*).
-2. Descargá la carpeta [`pc/`](../pc) del repo a tu computadora, por ejemplo en `C:\cerebro`.
-3. Abrí una terminal en esa carpeta e instalá las dependencias:
-
-   ```powershell
-   pip install -r requirements.txt
+   ```json
+   {
+     "cerebro_link": "cerebro-9e36…:6053…",
+     "gemini_api_key": "tu-clave-de-aistudio",
+     "telegram_token": "",
+     "equipos_prohibidos": []
+   }
    ```
 
-4. Copiá `config.example.json` a `config.json` y pegá tu `CEREBRO_LINK`. Ahí también se
-   configuran, si querés, WhatsApp, Telegram para los avisos al celular, y la domótica.
-5. Probalo:
+   - `cerebro_link`: el enlace del paso anterior.
+   - `gemini_api_key`: la misma clave que pusiste en la skill. La PC la usa para entender lo que
+     le escribís por Telegram y para mirar la pantalla en WhatsApp. Si preferís no tenerla en el
+     JSON, ponela sola en un archivo `gemini_key.txt` en la misma carpeta.
+   - `telegram_token`: opcional pero muy recomendable, es el canal para los avisos al celular y
+     para darle órdenes sin el Echo. Ver más abajo.
+   - `equipos_prohibidos`: dejalo vacío. Sirve si instalás Cerebro en una segunda PC y querés
+     asegurarte de que nunca corra en la principal: `["NOMBRE-DE-LA-PC-PRINCIPAL"]`.
 
-   ```powershell
-   python cerebro_pc.py
-   ```
+   Todo lo demás se puede dejar como está o completar después con `configurar.bat`.
 
-   Y desde el Echo: *"anotá que tengo que comprar pilas"*. La terminal tiene que mostrar la orden
-   recibida y Alexa responder "Anotado".
+4. Doble clic en **`instalar.bat`**. Crea el acceso directo en la carpeta *Inicio* de Windows,
+   arranca el agente sin ventana y te dice en verde si quedó corriendo.
+5. Probalo desde el Echo: *"anotá que tengo que comprar pilas"* → "Anotado". La nota queda en
+   `C:\Users\<vos>\Cerebro\Inbox.md`.
 
-6. Para que arranque solo con Windows, ejecutá `instalar_inicio.ps1` o creá un acceso directo a
-   `pythonw cerebro_pc.py` en la carpeta *Inicio* (`Win+R` → `shell:startup`).
+Si algo falla, el archivo `cerebro_pc.log` de esa carpeta dice por qué.
+
+### Telegram *(recomendado)*
+
+Con un bot de Telegram, Cerebro te manda al celular las cosas largas (recetas, listas, resultados
+de tareas, fotos de la pantalla), te avisa solo (dólar, lluvia, mails importantes, agenda), y le
+podés escribir o mandarle notas de voz para que haga cosas en la PC sin pasar por Alexa.
+
+1. En Telegram, hablale a **@BotFather**, mandá `/newbot` y seguí los pasos. Te da un *token*.
+2. Pegalo en `config_pc.json`, en `"telegram_token"`.
+3. Abrí el chat con tu bot nuevo y mandale `/start`. El agente detecta tu chat con ese primer
+   mensaje y **desde ahí ignora a cualquier otra persona**.
+4. Reiniciá el agente (`configurar.bat` lo hace) y escribile: *"qué pendientes tengo"*.
+
+### Extras: pantalla, WhatsApp, luces, agenda y mails
+
+1. **`instalar-extras.bat`** instala las dependencias de pantalla y WhatsApp de escritorio
+   (pyautogui, pillow, pyperclip, pygetwindow), luces y enchufes (python-kasa, pywizlight) y
+   agenda (icalendar, recurring-ical-events).
+2. **`configurar.bat`** abre un asistente que conecta y prueba en el momento:
+   - **Google Calendar:** con el *link secreto iCal* del calendario (Configuración del calendario →
+     *Dirección secreta en formato iCal*). Sin contraseña ni permisos de Google.
+   - **Gmail:** con una [contraseña de aplicación](https://myaccount.google.com/apppasswords), no tu
+     contraseña. Solo lee: nunca marca como leído, borra ni manda.
+   - La **hora del resumen de la mañana** y **tu equipo** de fútbol, para que te avise si juega.
+3. **WhatsApp** usa la app de WhatsApp de escritorio que ya tenés abierta y logueada: no hay QR ni
+   WhatsApp Web. Necesita la clave de Gemini para mirar la pantalla y elegir el contacto correcto.
+4. **Luces y enchufes:** *"buscá aparatos"* descubre luces WiZ y dispositivos TP-Link (Kasa/Tapo)
+   en tu red. Para Tapo hace falta el usuario y la clave de la cuenta TP-Link en `tplink_usuario`
+   y `tplink_clave`. Después les ponés nombre: *"a este llamalo lámpara del escritorio"*.
+
+### Claude Code *(para las tareas largas)*
+
+Las tareas ("pedile a Claude que ordene mi carpeta de descargas") y las tareas de pantalla ("fijate
+en Instagram si tengo mensajes") las hace [Claude Code](https://claude.com/claude-code) en tu PC.
+**`instalar-claude.bat`** lo instala (necesita Node.js); después iniciá sesión una vez con `claude`
+en una terminal. Las consultas corren con herramientas de solo lectura; los cambios primero se
+planifican, el plan te llega al celular y se ejecuta cuando lo aprobás.
+
+### Actualizar y desinstalar
+
+- **`ACTUALIZAR.bat`** desde una carpeta con la versión nueva: copia los archivos a donde está
+  instalado, sin tocar `config_pc.json` ni las claves, y reinicia el agente.
+- **`desinstalar.bat`** detiene el agente y quita el arranque automático. Tus notas quedan.
 
 Si la PC está apagada cuando le hablás, las notas y los pendientes quedan en cola hasta 12 horas y
 se procesan al encenderse. El resto de las acciones responde "no tengo conexión con la compu".

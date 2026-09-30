@@ -15,17 +15,20 @@ jobs:
           python-version: "3.12"
 
       - name: Compilar
-        run: python -m compileall -q lambda pc
+        run: python -m compileall -q lambda pc pruebas
 
       - name: Lint
         run: |
           pip install -q ruff
-          ruff check --select E9,F63,F7,F82 lambda pc
+          ruff check --select E9,F63,F7,F82 lambda pc pruebas
 
       - name: Validar el modelo de interacción
         run: python -c "import json,sys; m=json.load(open('skill-package/interactionModels/custom/es-US.json'))['interactionModel']['languageModel']; print('invocación:', m['invocationName'], '| intents:', len(m['intents']))"
 
       - name: Verificar que no haya secretos
         run: |
-          ! grep -rEn "AIza[0-9A-Za-z_-]{20,}|AQ\.[0-9A-Za-z_-]{30,}|cerebro-[0-9a-f]{20}:[0-9a-f]{48}" --include=*.py --include=*.json --include=*.md . \
+          ! grep -rEn "AIza[0-9A-Za-z_-]{20,}|AQ\.[0-9A-Za-z_-]{30,}|cerebro-[0-9a-f]{20}:[0-9a-f]{48}|[0-9]{8,10}:AA[0-9A-Za-z_-]{33}" --include=*.py --include=*.json --include=*.md --include=*.bat --include=*.ps1 --include=*.txt . \
             || { echo "Hay una clave real en el repo"; exit 1; }
+
+      - name: Verificar la plantilla de configuración del agente
+        run: python -c "import json; c=json.load(open('pc/config.example.json')); assert c['cerebro_link']=='' and c['gemini_api_key']=='' and c['telegram_token']==''; print('plantilla OK:', len(c), 'claves')"

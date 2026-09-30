@@ -64,15 +64,15 @@ NO = ("no", "cancelar", "cancela", "cancelá", "mejor no", "no lo hagas")
 # Acciones de la PC (las ejecuta pc/cerebro_pc.py)
 PC_ACTIONS = {"nota", "buscar_notas", "pendientes", "completar_pendiente", "abrir_web", "abrir_app", "musica",
               "volumen", "sistema", "tarea", "confirmar_tarea", "estado", "info_pc", "avisar",
-              "whatsapp", "whatsapp_confirmar", "whatsapp_leer",
+              "whatsapp", "whatsapp_confirmar", "whatsapp_leer", "pantalla_confirmar",
               "casa", "casa_descubrir", "diagnostico", "frase", "recordar", "olvidar", "que_sabes", "whatsapp_editar", "aprender",
     "programar", "programados", "borrar_programado", "compras",
     "captura", "enviar_archivo", "cerrar_app", "tareas_estado", "cancelar_tarea",
     "whatsapp_resumen", "whatsapp_archivo", "alertas", "nombrar_aparato", "buscar_aparatos",
     "agenda", "mails", "salud_pc", "musica_control", "resumen_manana"}
 PC_INFO_ACTIONS = {"que_sabes", "olvidar", "buscar_notas", "pendientes", "estado", "tarea", "confirmar_tarea", "completar_pendiente",
-                   "info_pc", "whatsapp", "whatsapp_confirmar", "whatsapp_leer",
-                   "casa", "casa_descubrir", "diagnostico", "whatsapp_editar", "aprender",
+                   "info_pc", "whatsapp", "whatsapp_confirmar", "whatsapp_leer", "pantalla_confirmar",
+                   "casa", "casa_descubrir", "diagnostico", "frase", "recordar", "olvidar", "que_sabes", "whatsapp_editar", "aprender",
     "programar", "programados", "borrar_programado", "compras",
     "captura", "enviar_archivo", "cerrar_app", "tareas_estado", "cancelar_tarea",
     "whatsapp_resumen", "whatsapp_archivo", "alertas", "nombrar_aparato", "buscar_aparatos",
@@ -198,8 +198,13 @@ Acciones en la PC del usuario, con {{"tipo": "pc", "accion": "...", "datos": {{.
   La PC hace lo correcto y lo guarda como lección (no como atajo fijo). Responde solo "Entendido.".
   Las lecciones aparecen en tu memoria como "Cuando el usuario dice...": tenlas en cuenta, pero entiende cada
   pedido completo; si pide algo distinto, haz lo que pide ahora.
-- "tarea" con "modo": "pantalla"  -> cuando haya que manejar la pantalla: abrir una app y navegar por ella,
-  hacer clics, completar formularios o usar una web. Trabaja sola y avisa al celular al terminar.
+- "tarea" con "modo": "pantalla"  -> PARA CUALQUIER COSA EN UNA APP O SITIO: Instagram, Facebook, Gmail,
+  Excel, Spotify, el navegador, lo que sea. Maneja mouse y teclado mirando la pantalla: busca, escribe,
+  hace clics, completa formularios, sube archivos. Trabaja sola, tarda varios minutos y avisa al celular
+  con una foto al terminar. Si la tarea es publicar o enviar algo que vean otros, deja todo listo SIN
+  enviar y el usuario lo aprueba después.
+- "pantalla_confirmar" {{}}  -> cuando el usuario aprueba lo que quedó listo en pantalla
+  ("confirmá la publicación", "sí, publicalo", "mandalo").
 Para "buscar_notas", "pendientes", "tarea", "confirmar_tarea", "estado", "info_pc", "agenda", "mails", "salud_pc" y
 "musica_control", tu frase debe ser mínima (por ejemplo
 "Un momento."), porque el resultado real se agrega después. Para apagar, reiniciar o suspender, NO preguntes tú:
@@ -240,18 +245,6 @@ ACCIONES: [{{"tipo": "pc", "accion": "nota", "datos": {{"texto": "Hacer un video
 Usuario: qué pendientes tengo
 Asistente: Un momento.
 ACCIONES: [{{"tipo": "pc", "accion": "pendientes", "datos": {{}}}}]
-Usuario: prendé la luz del living
-Asistente: Un momento.
-ACCIONES: [{{"tipo": "pc", "accion": "casa", "datos": {{"dispositivo": "luz living", "accion": "prender"}}}}]
-Usuario: poné la luz azul
-Asistente: Un momento.
-ACCIONES: [{{"tipo": "pc", "accion": "casa", "datos": {{"dispositivo": "luz", "accion": "color", "valor": "azul"}}}}]
-Usuario: poné modo fiesta
-Asistente: Un momento.
-ACCIONES: [{{"tipo": "pc", "accion": "casa", "datos": {{"dispositivo": "luz", "accion": "escena", "valor": "fiesta"}}}}]
-Usuario: poné la luz del living al treinta por ciento
-Asistente: Un momento.
-ACCIONES: [{{"tipo": "pc", "accion": "casa", "datos": {{"dispositivo": "luz living", "accion": "brillo", "valor": 30}}}}]
 Usuario: apaga la computadora
 Asistente: De acuerdo.
 ACCIONES: [{{"tipo": "pc", "accion": "sistema", "datos": {{"orden": "apagar"}}}}]
@@ -273,6 +266,24 @@ ACCIONES: [{{"tipo": "pc", "accion": "whatsapp_leer", "datos": {{"contacto": "La
 Usuario: abrí el navegador y buscá el clima de Córdoba
 Asistente: Un momento.
 ACCIONES: [{{"tipo": "pc", "accion": "tarea", "datos": {{"instruccion": "Abrir el navegador y buscar el clima de Córdoba", "modo": "pantalla"}}}}]
+Usuario: prendé la luz del living
+Asistente: Un momento.
+ACCIONES: [{{"tipo": "pc", "accion": "casa", "datos": {{"dispositivo": "luz living", "accion": "prender"}}}}]
+Usuario: poné la luz azul
+Asistente: Un momento.
+ACCIONES: [{{"tipo": "pc", "accion": "casa", "datos": {{"dispositivo": "luz", "accion": "color", "valor": "azul"}}}}]
+Usuario: poné modo fiesta
+Asistente: Un momento.
+ACCIONES: [{{"tipo": "pc", "accion": "casa", "datos": {{"dispositivo": "luz", "accion": "escena", "valor": "fiesta"}}}}]
+Usuario: poné la luz del living al treinta por ciento
+Asistente: Un momento.
+ACCIONES: [{{"tipo": "pc", "accion": "casa", "datos": {{"dispositivo": "luz living", "accion": "brillo", "valor": 30}}}}]
+Usuario: fijate en Instagram si tengo mensajes nuevos
+Asistente: Un momento.
+ACCIONES: [{{"tipo": "pc", "accion": "tarea", "datos": {{"instruccion": "Abrir Instagram y revisar si hay mensajes directos nuevos, contando de quién son", "modo": "pantalla"}}}}]
+Usuario: subí a Facebook una publicación que diga que mañana abrimos a las nueve
+Asistente: Un momento.
+ACCIONES: [{{"tipo": "pc", "accion": "tarea", "datos": {{"instruccion": "Abrir Facebook y dejar escrita una publicación que diga: Mañana abrimos a las nueve. Dejarla lista sin publicar", "modo": "pantalla"}}}}]
 Usuario: investiga las mejores estrategias para retener usuarios en una app de finanzas
 Asistente: Un momento.
 ACCIONES: [{{"tipo": "pc", "accion": "tarea", "datos": {{"instruccion": "Investigar las mejores estrategias para retener usuarios en una app de finanzas personales y resumirlas", "modo": "consulta"}}}}]
@@ -470,8 +481,6 @@ def ntfy_publish(topic, text, title=None, timeout=2.0):
         resp.read()
 
 
-
-
 def send_to_pc(accion, datos, wait):
     """Send a signed order to the PC and wait up to `wait` seconds for its signed reply.
 
@@ -519,6 +528,8 @@ def notify_phone(text):
     except Exception as e:
         logger.warning("aviso por la PC falló: %s", e)
         return False
+
+
 def send_to_pc_async(accion, datos):
     """Manda una orden a la PC sin esperar respuesta: sirve para sincronizar la memoria."""
     topic, secret = pc_link()
