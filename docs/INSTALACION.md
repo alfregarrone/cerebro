@@ -168,6 +168,20 @@ podés escribir o mandarle notas de voz para que haga cosas en la PC sin pasar p
    mensaje y **desde ahí ignora a cualquier otra persona**.
 4. Reiniciá el agente (`configurar.bat` lo hace) y escribile: *"qué pendientes tengo"*.
 
+### El panel en el navegador
+
+El agente trae un panel web local con todas las acciones de la PC y las automatizaciones (rutinas por
+horario, avisos, alertas, resumen de la mañana). No hay que instalar nada más:
+
+1. Con el agente corriendo, doble clic en **`abrir-panel.bat`**: abre `http://127.0.0.1:8765/` en el navegador
+   ya con el token. Por Telegram, escribirle *"panel"* al bot te manda el mismo link.
+2. Para usarlo desde **tu otra PC o el celular** en la misma red, poné `"panel_en_red": true` en `config_pc.json`
+   y reiniciá el agente. La primera vez, permití a Python en el firewall de Windows (redes privadas).
+
+Escucha solo en esa PC salvo que lo pidas, exige el token, y lo peligroso (apagar, mandar un WhatsApp, ejecutar un
+plan de Claude Code) pide confirmación. Nunca lo expongas a internet. Todo el detalle en
+[PANEL.md](PANEL.md).
+
 ### Extras: pantalla, WhatsApp, luces, agenda y mails
 
 1. **`instalar-extras.bat`** instala las dependencias de pantalla y WhatsApp de escritorio

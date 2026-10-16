@@ -44,6 +44,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "$p = Get-CimInstance Win
 
 echo.
 echo Tus notas se guardaran en: %USERPROFILE%\Cerebro
+echo Para abrir el panel en el navegador, ejecuta abrir-panel.bat (o escribile "panel" al bot de Telegram).
 echo Para desinstalar, ejecuta desinstalar.bat
 echo.
 pause

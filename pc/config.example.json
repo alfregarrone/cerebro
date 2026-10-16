@@ -20,5 +20,10 @@
   "tplink_clave": "",
   "casa_apodos": {},
 
+  "panel_activo": true,
+  "panel_puerto": 8765,
+  "panel_en_red": false,
+  "panel_token": "",
+
   "equipos_prohibidos": []
 }

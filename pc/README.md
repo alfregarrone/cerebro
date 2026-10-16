@@ -16,6 +16,8 @@ datos en vivo). Con él, Cerebro tiene manos.
 | Archivo | Qué hace |
 |---|---|
 | `cerebro_pc.py` | El agente. Escucha ntfy.sh y Telegram, valida la firma de cada orden y la ejecuta. Corre sin ventana con `pythonw`. |
+| `panel.py` / `panel.html` | El [panel web local](../docs/PANEL.md): todas las acciones con formulario, consola, automatizaciones, notas, tareas, casa, memoria y registro. Lo arranca el agente; solo biblioteca estándar. |
+| `abrir-panel.bat` | Abre el panel en el navegador con el token puesto. |
 | `config.example.json` | Plantilla de configuración. Copiala a `config_pc.json` (ese archivo nunca va al repo). |
 | `instalar.bat` | Crea el acceso directo de inicio de Windows y arranca el agente. |
 | `instalar-extras.bat` | Instala las dependencias opcionales: pantalla y WhatsApp, luces y enchufes, agenda. |
@@ -45,8 +47,13 @@ Celular ──► bot de Telegram ───────────────�
                                           agenda · mails · capturas · avisos · Claude Code ◄──┘
 ```
 
-- **Sin puertos abiertos.** La PC solo hace conexiones salientes: escucha el tópico de ntfy.sh y
-  el bot de Telegram. No hay que tocar el router ni tener IP fija.
+- **Sin puertos abiertos a internet.** La PC solo hace conexiones salientes: escucha el tópico de ntfy.sh y
+  el bot de Telegram. No hay que tocar el router ni tener IP fija. El panel web escucha solo en
+  `127.0.0.1` (o en tu red de casa con `panel_en_red`), pide un token y lo peligroso exige confirmación.
+- **Un panel para verlo y automatizarlo todo.** `panel.py` sirve `panel.html` en `http://127.0.0.1:8765/`:
+  el catálogo completo de acciones con formulario, una consola de órdenes, rutinas por horario (también con
+  una acción y sus datos exactos), alertas, resumen de la mañana, notas, tareas de Claude Code, luces,
+  memoria y registro. Se abre con `abrir-panel.bat` o escribiendo "panel" al bot.
 - **Lista cerrada de acciones.** `ACCIONES` en `cerebro_pc.py` es todo lo que la PC puede hacer.
   Una orden que no está ahí se rechaza, y una orden sin firma válida se ignora en silencio.
 - **Lo delicado pide "sí".** Mandar un WhatsApp, apagar o reiniciar, y ejecutar un plan de
@@ -78,6 +85,7 @@ Celular ──► bot de Telegram ───────────────�
   Se puede cambiar con `carpeta_notas` en `config_pc.json`.
 - Archivos que le mandás por Telegram: `Descargas\Cerebro`.
 - Log del agente: `cerebro_pc.log`, junto a `cerebro_pc.py`.
+- Token y puerto del panel: `estado.json` (`panel_token`, `panel_puerto`), junto a `cerebro_pc.py`.
 
 ## Limitaciones
 

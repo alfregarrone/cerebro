@@ -210,6 +210,20 @@ voz, y además:
 
 Solo acepta órdenes de **tu** chat: los mensajes de otras personas se ignoran.
 
+### El panel en la PC
+
+Todo lo de arriba, pero con botones: una página local con todas las acciones de la PC (cada una con su
+formulario y sus ejemplos de voz), una consola para escribir órdenes como por Telegram, y las
+automatizaciones (rutinas por horario, avisos, alertas, resumen de la mañana). También notas, compras,
+tareas de Claude Code con sus informes, luces, memoria y el registro.
+
+> `abrir-panel.bat` en la PC, o escribile *"panel"* al bot y te manda el link
+> Con `"panel_en_red": true` en `config_pc.json` lo usás desde tu otra PC o el celular en la misma red
+
+Para dejar algo automatizado: en **Acciones** completás la acción, tocás **Automatizar**, elegís cuándo
+(a una hora y qué días, cada tantos minutos, o dentro de tantos minutos) y listo: la PC la ejecuta sola con
+esos datos exactos y te manda el resultado al celular. La guía completa está en [PANEL.md](PANEL.md).
+
 ### Aprende solo
 
 No hay frases fijas: entiende cada pedido con la IA. Si se equivoca, decile *"no, eso no, quería…"*:

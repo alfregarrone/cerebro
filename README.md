@@ -46,6 +46,7 @@ vivo de APIs públicas sin clave.
 | **Mandarte cosas al celular** | "pasame la receta al celular", "mandame esa lista" |
 | **Tu PC** *(con el agente instalado)* | "anotá que...", "¿qué tengo pendiente?", "abrí YouTube", "poné música de Soda Stereo", "apagá la compu", "mandale un WhatsApp a Juan que llego tarde", "¿qué tengo mañana?", "¿tengo mails?", "prendé la luz del living", "sacá una captura", "pedile a Claude que ordene mi carpeta de descargas", "fijate en Instagram si tengo mensajes" |
 | **Desde Telegram** *(con el agente)* | Lo mismo por escrito o nota de voz cuando no estás cerca del Echo, más el resumen de la mañana, avisos solos de dólar, lluvia, mails importantes y agenda, y los archivos que Claude genera |
+| **Panel en la PC** *(con el agente)* | Una página local con todas las acciones de la PC para ejecutarlas y dejarlas automatizadas: rutinas por horario, avisos, alertas y el resumen de la mañana. Se abre con `abrir-panel.bat`, escribiendo "panel" al bot, o desde tu otra PC o el celular en la misma red |
 
 ## Cómo funciona
 
@@ -64,6 +65,7 @@ Echo ──► Alexa ──► Skill (Python, Alexa-hosted Lambda)
                        └─ Puente con la PC ── ntfy.sh, mensajes firmados con HMAC ──► pc/cerebro_pc.py
                                                                                        │
                        Telegram (bot propio) ◄──── avisos, resumen de la mañana, órdenes ──┤
+                       Panel web (navegador) ◄──── todas las acciones y automatizaciones ──┤
                                                                                        │
                           notas · apps · música · WhatsApp · luces · agenda · mails ◄──┤
                           capturas · tareas de pantalla y de código con Claude Code ◄──┘
@@ -98,7 +100,8 @@ La guía completa está en **[docs/INSTALACION.md](docs/INSTALACION.md)**. En re
 5. *(Opcional)* Copiá la carpeta `pc/` a tu computadora (Windows), completá `config_pc.json` y
    ejecutá `instalar.bat`. Con un bot de Telegram, además, te avisa al celular y le podés escribir.
 
-Cómo hablarle, con todos los ejemplos: **[docs/USO.md](docs/USO.md)**.
+Cómo hablarle, con todos los ejemplos: **[docs/USO.md](docs/USO.md)**. El panel de la PC, con el catálogo
+completo y las automatizaciones: **[docs/PANEL.md](docs/PANEL.md)**.
 
 ## Estructura
 
@@ -110,8 +113,9 @@ lambda/                 código de la skill (Alexa-hosted, Python 3)
 skill-package/          manifiesto y modelo de interacción (es-US)
 pc/                     agente que corre en tu computadora (Windows)
   cerebro_pc.py         escucha ntfy.sh y Telegram, valida la firma y ejecuta la lista cerrada de acciones
+  panel.py · panel.html panel web local: todas las acciones y las automatizaciones desde el navegador
   agenda.py · correo.py · casa.py · medios.py · whatsapp_app.py · escritorio.py · info.py
-  instalar.bat · instalar-extras.bat · configurar.bat · ACTUALIZAR.bat · desinstalar.bat
+  instalar.bat · instalar-extras.bat · configurar.bat · abrir-panel.bat · ACTUALIZAR.bat · desinstalar.bat
   config.example.json   plantilla (enlace, Telegram, Gemini, calendario, Gmail, luces)
 pruebas/                baterías de prueba: skill entera con un Echo falso, bot de Telegram, agenda, mails, música
 docs/                   instalación y uso
@@ -129,10 +133,12 @@ docs/                   instalación y uso
 - **La búsqueda web está apagada** porque el grounding de Gemini no está disponible en el nivel
   gratuito. Los datos en vivo salen de APIs públicas específicas, que son más rápidas y confiables
   que una búsqueda genérica para lo que este bot necesita.
-- **El agente de PC no expone nada y no hace nada que no esté en una lista.** Escucha ntfy.sh y
-  Telegram con conexiones salientes, ejecuta solo las acciones de `ACCIONES`, y lo delicado
+- **El agente de PC no expone nada a internet y no hace nada que no esté en una lista.** Escucha
+  ntfy.sh y Telegram con conexiones salientes, ejecuta solo las acciones de `ACCIONES`, y lo delicado
   (WhatsApp, apagar, ejecutar un plan de Claude Code) pide "sí". Claude Code corre con
   herramientas de solo lectura para consultar; para cambiar cosas, el plan pasa por tu celular.
+  El único puerto es el del [panel web](docs/PANEL.md), que escucha solo en `127.0.0.1` (o en tu
+  red de casa si lo pedís), con token y confirmación para lo peligroso.
 - **Limitaciones actuales:** un solo usuario por skill (la memoria no distingue voces), la
   vía rápida está pensada en castellano rioplatense y no reconoce todas las variantes, las radios
   dependen del directorio público Radio Browser, y el agente de PC está hecho para Windows.

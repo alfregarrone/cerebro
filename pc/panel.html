@@ -1,0 +1,923 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cerebro · panel</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%232563eb'/%3E%3Ctext x='16' y='21' font-size='15' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3EC%3C/text%3E%3C/svg%3E">
+<style>
+:root {
+  --fondo: #f3f4f7; --panel: #ffffff; --texto: #1b1b22; --suave: #5f6070; --borde: #dcdde4; --chip: #e9eaf0;
+  --primario: #2563eb; --primario-texto: #ffffff; --ok: #15803d; --err: #b91c1c; --aviso: #b45309; --peligro: #dc2626;
+  --sombra: 0 1px 3px rgba(0,0,0,.08); --radio: 12px; --mono: ui-monospace, Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --fondo: #111116; --panel: #1b1b23; --texto: #ebebf1; --suave: #9c9dac; --borde: #2c2d39; --chip: #262734;
+          --primario: #3b82f6; --ok: #4ade80; --err: #f87171; --aviso: #fbbf24; --sombra: 0 1px 3px rgba(0,0,0,.4); }
+}
+:root[data-tema="claro"] {
+  --fondo: #f3f4f7; --panel: #ffffff; --texto: #1b1b22; --suave: #5f6070; --borde: #dcdde4; --chip: #e9eaf0;
+  --primario: #2563eb; --ok: #15803d; --err: #b91c1c; --aviso: #b45309; --sombra: 0 1px 3px rgba(0,0,0,.08);
+}
+:root[data-tema="oscuro"] {
+  --fondo: #111116; --panel: #1b1b23; --texto: #ebebf1; --suave: #9c9dac; --borde: #2c2d39; --chip: #262734;
+  --primario: #3b82f6; --ok: #4ade80; --err: #f87171; --aviso: #fbbf24; --sombra: 0 1px 3px rgba(0,0,0,.4);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--fondo); color: var(--texto); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--primario); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; border: 1px solid var(--borde); background: var(--panel); border-radius: 8px; padding: 7px 12px; }
+button:hover { border-color: var(--primario); }
+button:disabled { opacity: .55; cursor: wait; }
+button.primario { background: var(--primario); color: var(--primario-texto); border-color: var(--primario); }
+button.peligro { color: var(--peligro); border-color: var(--peligro); }
+button.chico { padding: 4px 9px; font-size: 13px; }
+button.lisa { border: 0; background: transparent; color: var(--primario); padding: 2px 6px; }
+input, select, textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--borde); border-radius: 8px; background: var(--panel); }
+input[type="checkbox"], input[type="radio"] { width: auto; }
+input[type="range"] { padding: 0; border: 0; background: transparent; }
+textarea { resize: vertical; min-height: 60px; }
+label.campo { display: block; margin: 8px 0 0; font-size: 13px; color: var(--suave); }
+label.campo > span { display: block; margin-bottom: 3px; }
+label.fila { display: flex; align-items: center; gap: 8px; margin: 8px 0 0; }
+.ayuda { font-size: 12px; color: var(--suave); margin-top: 3px; }
+.obligatorio::after { content: " *"; color: var(--err); }
+.invalido { border-color: var(--err) !important; }
+h2 { font-size: 18px; margin: 0 0 10px; }
+h3 { font-size: 15px; margin: 0 0 8px; }
+.suave { color: var(--suave); }
+.chico-txt { font-size: 13px; }
+.mono { font-family: var(--mono); font-size: 13px; }
+pre { font-family: var(--mono); font-size: 13px; white-space: pre-wrap; word-break: break-word; margin: 0; }
+.oculto { display: none !important; }
+
+/* cabecera y pestañas */
+header { position: sticky; top: 0; z-index: 20; background: var(--panel); border-bottom: 1px solid var(--borde);
+         display: flex; align-items: center; gap: 12px; padding: 10px 16px; }
+.marca { font-weight: 700; font-size: 18px; white-space: nowrap; }
+.marca small { font-weight: 400; color: var(--suave); font-size: 13px; margin-left: 6px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+.chip { font-size: 12px; background: var(--chip); border-radius: 999px; padding: 3px 9px; white-space: nowrap; }
+.chip.ok { color: var(--ok); } .chip.err { color: var(--err); } .chip.aviso { color: var(--aviso); }
+nav.pestanas { display: flex; gap: 4px; padding: 8px 12px 0; overflow-x: auto; background: var(--panel); border-bottom: 1px solid var(--borde);
+               position: sticky; top: 49px; z-index: 19; scrollbar-width: none; }
+nav.pestanas::-webkit-scrollbar { display: none; }
+nav.pestanas button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; padding: 8px 12px;
+                      color: var(--suave); white-space: nowrap; }
+nav.pestanas button.activa { color: var(--primario); border-bottom-color: var(--primario); font-weight: 600; }
+nav.pestanas button .n { font-size: 11px; background: var(--chip); border-radius: 999px; padding: 1px 6px; margin-left: 4px; }
+main { padding: 16px; max-width: 1280px; margin: 0 auto; padding-bottom: 110px; }
+section.tab { display: none; } section.tab.activa { display: block; }
+
+/* tarjetas y grillas */
+.grilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.grilla.ancha { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+.tarjeta { background: var(--panel); border: 1px solid var(--borde); border-radius: var(--radio); padding: 14px; box-shadow: var(--sombra); }
+.tarjeta h3 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.etiqueta { font-size: 11px; border-radius: 999px; padding: 1px 7px; background: var(--chip); color: var(--suave); font-weight: 500; }
+.etiqueta.peligro { color: var(--peligro); background: color-mix(in srgb, var(--peligro) 12%, transparent); }
+.ejemplos { color: var(--suave); font-size: 13px; font-style: italic; margin: 4px 0 6px; }
+.acciones-botones { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.lista { list-style: none; margin: 0; padding: 0; }
+.lista li { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-top: 1px solid var(--borde); }
+.lista li:first-child { border-top: 0; }
+.lista li .crece { flex: 1; min-width: 0; word-break: break-word; }
+.lista li.hecho .crece { text-decoration: line-through; color: var(--suave); }
+.stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.stat { background: var(--chip); border-radius: 10px; padding: 8px 10px; }
+.stat b { display: block; font-size: 12px; color: var(--suave); font-weight: 500; }
+.stat span { font-size: 15px; }
+.barra-herr { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
+.barra-herr input, .barra-herr select { width: auto; flex: 1; min-width: 160px; }
+.toggle { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--borde); }
+.toggle:first-child { border-top: 0; }
+.switch { position: relative; width: 42px; height: 24px; flex: none; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch i { position: absolute; inset: 0; background: var(--borde); border-radius: 999px; transition: .2s; }
+.switch i::before { content: ""; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+.switch input:checked + i { background: var(--primario); }
+.switch input:checked + i::before { transform: translateX(18px); }
+.dias { display: flex; gap: 4px; flex-wrap: wrap; }
+.dias label { display: flex; align-items: center; gap: 3px; font-size: 13px; background: var(--chip); border-radius: 999px; padding: 3px 8px; cursor: pointer; }
+.columnas { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.consola { background: var(--chip); border-radius: 10px; padding: 10px; max-height: 320px; overflow: auto; font-size: 14px; }
+.consola .yo { color: var(--primario); margin-top: 8px; }
+.consola .el { white-space: pre-wrap; word-break: break-word; }
+.consola .hora { font-size: 11px; color: var(--suave); margin-left: 6px; }
+.progreso { font-size: 13px; color: var(--suave); }
+.rapidos { display: flex; gap: 8px; flex-wrap: wrap; }
+.vacio { color: var(--suave); font-style: italic; padding: 6px 0; }
+.alerta { border-left: 4px solid var(--aviso); padding: 8px 12px; background: var(--panel); border-radius: 8px; margin-bottom: 10px;
+          display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.alerta .crece { flex: 1; }
+
+/* resultado y modal */
+#resultado { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 30; background: var(--panel); border: 1px solid var(--borde);
+             border-left: 5px solid var(--ok); border-radius: 10px; padding: 10px 14px; box-shadow: 0 6px 24px rgba(0,0,0,.18);
+             display: flex; gap: 10px; align-items: flex-start; max-width: 760px; margin: 0 auto; }
+#resultado.err { border-left-color: var(--err); }
+#resultado .crece { flex: 1; min-width: 0; white-space: pre-wrap; word-break: break-word; max-height: 160px; overflow: auto; }
+#resultado .quien { font-size: 12px; color: var(--suave); display: block; }
+#modal { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 16px; }
+#modal .caja { background: var(--panel); border-radius: var(--radio); width: 100%; max-width: 820px; max-height: 90vh; display: flex; flex-direction: column; }
+#modal .cabeza { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--borde); }
+#modal .cabeza b { flex: 1; }
+#modal .cuerpo { padding: 14px 16px; overflow: auto; }
+@media (max-width: 600px) {
+  header { padding: 8px 12px; } .chips { display: none; } main { padding: 12px; }
+  nav.pestanas { top: 45px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="marca">Cerebro <small>panel de la PC</small></div>
+  <div class="chips" id="chips"></div>
+  <button class="chico" id="btn-tema" title="Cambiar entre claro y oscuro">◐</button>
+</header>
+<nav class="pestanas" id="pestanas">
+  <button data-tab="inicio" class="activa">Inicio</button>
+  <button data-tab="acciones">Acciones</button>
+  <button data-tab="automatizaciones">Automatizaciones <span class="n" id="n-prog"></span></button>
+  <button data-tab="notas">Notas <span class="n" id="n-pend"></span></button>
+  <button data-tab="tareas">Tareas <span class="n" id="n-tareas"></span></button>
+  <button data-tab="casa">Casa</button>
+  <button data-tab="memoria">Memoria</button>
+  <button data-tab="registro">Registro</button>
+</nav>
+<main>
+
+<!-- ============ INICIO ============ -->
+<section class="tab activa" id="tab-inicio">
+  <div id="avisos-inicio"></div>
+  <div class="columnas">
+    <div class="tarjeta">
+      <h2>Estado de la PC</h2>
+      <div class="stats" id="stats"></div>
+    </div>
+    <div class="tarjeta">
+      <h2>Consola</h2>
+      <p class="suave chico-txt" style="margin:0 0 8px">Escribile como por Telegram: <i>prendé la luz</i>, <i>qué tengo pendiente</i>, <i>recordame cada 2 horas tomar agua</i>…</p>
+      <form id="form-orden" class="barra-herr" style="margin-bottom:8px">
+        <input id="orden-texto" placeholder="Una orden en texto libre" autocomplete="off">
+        <button class="primario" type="submit">Mandar</button>
+      </form>
+      <div class="consola" id="consola"><div class="vacio">Acá van las respuestas de todo lo que hagas desde el panel.</div></div>
+    </div>
+  </div>
+  <div class="tarjeta" style="margin-top:12px">
+    <h2>Accesos rápidos</h2>
+    <div class="rapidos" id="rapidos"></div>
+  </div>
+</section>
+
+<!-- ============ ACCIONES ============ -->
+<section class="tab" id="tab-acciones">
+  <div class="barra-herr">
+    <input id="buscar-accion" placeholder="Buscar una acción (nombre, descripción o ejemplo)…" autocomplete="off">
+    <select id="grupo-accion"><option value="">Todos los grupos</option></select>
+    <span class="suave chico-txt" id="cuenta-acciones"></span>
+  </div>
+  <div class="grilla ancha" id="catalogo"></div>
+</section>
+
+<!-- ============ AUTOMATIZACIONES ============ -->
+<section class="tab" id="tab-automatizaciones">
+  <div class="columnas">
+    <div class="tarjeta">
+      <h2>Nueva automatización</h2>
+      <form id="form-prog">
+        <label class="campo"><span>Qué</span>
+          <select id="prog-tipo">
+            <option value="aviso">Aviso al celular (Telegram)</option>
+            <option value="orden">Orden en texto libre (la PC la interpreta)</option>
+            <option value="accion">Una acción del catálogo, con sus datos exactos</option>
+          </select>
+        </label>
+        <label class="campo" id="prog-campo-texto"><span>Texto</span><input id="prog-texto" placeholder="Tomar agua · prendé la luz del living"></label>
+        <div id="prog-campo-accion" class="oculto">
+          <label class="campo"><span>Acción</span><select id="prog-accion"></select></label>
+          <div id="prog-form-accion"></div>
+          <label class="campo"><span>Nombre para mostrar (opcional)</span><input id="prog-nombre" placeholder="Se arma solo si lo dejás vacío"></label>
+        </div>
+        <label class="campo"><span>Cuándo</span>
+          <select id="prog-cuando">
+            <option value="hora">A una hora, los días que elija</option>
+            <option value="cada">Cada tantos minutos (en una franja horaria)</option>
+            <option value="en">Dentro de tantos minutos (una sola vez)</option>
+          </select>
+        </label>
+        <div id="prog-bloque-hora">
+          <label class="campo"><span>Hora</span><input type="time" id="prog-hora" value="08:00"></label>
+          <label class="campo"><span>Días</span></label>
+          <div class="dias" id="prog-dias"></div>
+          <label class="fila"><input type="checkbox" id="prog-una-vez"> Una sola vez (la próxima que caiga)</label>
+        </div>
+        <div id="prog-bloque-cada" class="oculto">
+          <label class="campo"><span>Cada (minutos)</span><input type="number" id="prog-cada" min="1" value="60"></label>
+          <div class="columnas" style="gap:8px">
+            <label class="campo"><span>Desde</span><input type="time" id="prog-desde" value="08:00"></label>
+            <label class="campo"><span>Hasta</span><input type="time" id="prog-hasta" value="23:00"></label>
+          </div>
+        </div>
+        <div id="prog-bloque-en" class="oculto">
+          <label class="campo"><span>Dentro de (minutos)</span><input type="number" id="prog-en" min="1" value="30"></label>
+        </div>
+        <div class="acciones-botones"><button class="primario" type="submit">Programar</button></div>
+      </form>
+    </div>
+    <div>
+      <div class="tarjeta">
+        <h2>Rutinas y avisos</h2>
+        <ul class="lista" id="lista-prog"><li class="vacio">Cargando…</li></ul>
+      </div>
+      <div class="tarjeta" style="margin-top:12px">
+        <h2>Alertas automáticas</h2>
+        <p class="suave chico-txt" style="margin:0 0 6px">Te escribe por Telegram sin que le preguntes.</p>
+        <div id="lista-alertas"></div>
+      </div>
+      <div class="tarjeta" style="margin-top:12px">
+        <h2>Resumen de la mañana</h2>
+        <form id="form-resumen">
+          <div class="columnas" style="gap:8px">
+            <label class="campo"><span>Hora</span><input type="time" id="res-hora"></label>
+            <label class="campo"><span>Días</span><select id="res-dias"><option value="todos">Todos los días</option><option value="semana">De lunes a viernes</option></select></label>
+          </div>
+          <label class="campo"><span>Tu equipo (avisa si juega hoy)</span><input id="res-equipo" placeholder="River, Boca…"></label>
+          <label class="fila"><label class="switch"><input type="checkbox" id="res-activo"><i></i></label> Mandarlo cada mañana</label>
+          <div class="acciones-botones">
+            <button class="primario" type="submit">Guardar</button>
+            <button type="button" id="res-ver">Ver ahora</button>
+            <button type="button" id="res-mandar">Mandar ahora al celular</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ NOTAS ============ -->
+<section class="tab" id="tab-notas">
+  <p class="suave chico-txt" id="notas-carpeta" style="margin:0 0 10px"></p>
+  <div class="columnas">
+    <div class="tarjeta">
+      <h2>Pendientes</h2>
+      <form id="form-pend" class="barra-herr"><input id="pend-texto" placeholder="Nuevo pendiente" autocomplete="off"><button class="primario">Agregar</button></form>
+      <ul class="lista" id="lista-pend"></ul>
+      <details style="margin-top:8px"><summary class="suave chico-txt">Hechos</summary><ul class="lista" id="lista-hechos"></ul></details>
+    </div>
+    <div class="tarjeta">
+      <h2>Lista de compras</h2>
+      <form id="form-compras" class="barra-herr"><input id="compras-texto" placeholder="leche, pan, huevos" autocomplete="off"><button class="primario">Agregar</button></form>
+      <ul class="lista" id="lista-compras"></ul>
+      <div class="acciones-botones">
+        <button class="chico" id="compras-celular">Mandar al celular</button>
+        <button class="chico peligro" id="compras-vaciar">Vaciar</button>
+      </div>
+    </div>
+    <div class="tarjeta">
+      <h2>Inbox</h2>
+      <form id="form-nota">
+        <textarea id="nota-texto" rows="2" placeholder="Una nota o una idea"></textarea>
+        <div class="barra-herr" style="margin-top:8px">
+          <select id="nota-cat"><option value="nota">nota</option><option value="idea">idea</option></select>
+          <button class="primario">Guardar</button>
+        </div>
+      </form>
+      <ul class="lista" id="lista-inbox"></ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAREAS ============ -->
+<section class="tab" id="tab-tareas">
+  <div id="aviso-claude"></div>
+  <div class="columnas">
+    <div class="tarjeta">
+      <h2>Nueva tarea para Claude Code</h2>
+      <form id="form-tarea">
+        <textarea id="tarea-texto" rows="3" placeholder="pedile que ordene la carpeta de descargas, que arme un Excel con los gastos, que se fije en Instagram si hay mensajes…"></textarea>
+        <div style="margin-top:8px">
+          <label class="fila"><input type="radio" name="modo" value="consulta" checked> <span><b>Consulta</b> <span class="suave chico-txt">solo lectura: investigar, resumir, analizar</span></span></label>
+          <label class="fila"><input type="radio" name="modo" value="cambios"> <span><b>Cambios</b> <span class="suave chico-txt">primero arma un plan y lo aprobás acá o por Telegram</span></span></label>
+          <label class="fila"><input type="radio" name="modo" value="pantalla"> <span><b>Pantalla</b> <span class="suave chico-txt">maneja mouse y teclado; lo que sea publicar o enviar lo deja listo sin mandar</span></span></label>
+        </div>
+        <div class="acciones-botones"><button class="primario" type="submit">Arrancar</button></div>
+      </form>
+    </div>
+    <div>
+      <div class="tarjeta">
+        <h2>En curso</h2>
+        <ul class="lista" id="lista-tareas"></ul>
+      </div>
+      <div class="tarjeta oculto" id="tarjeta-plan" style="margin-top:12px">
+        <h2>Plan esperando tu aprobación</h2>
+        <p id="plan-instruccion" style="margin:0 0 6px"></p>
+        <pre id="plan-texto" class="consola"></pre>
+        <div class="acciones-botones">
+          <button class="primario" id="plan-aprobar">Aprobar y ejecutar</button>
+          <button class="peligro" id="plan-descartar">Descartar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tarjeta" style="margin-top:12px">
+    <h2>Informes</h2>
+    <ul class="lista" id="lista-informes"></ul>
+  </div>
+</section>
+
+<!-- ============ CASA ============ -->
+<section class="tab" id="tab-casa">
+  <div id="aviso-casa"></div>
+  <div class="barra-herr">
+    <button id="casa-descubrir">Buscar dispositivos en la red</button>
+    <button id="casa-todas-on">Prender todas las luces</button>
+    <button id="casa-todas-off">Apagar todas</button>
+  </div>
+  <div class="grilla" id="lista-casa"></div>
+  <div class="tarjeta" style="margin-top:12px">
+    <h2>Ponerle nombre a un aparato</h2>
+    <form id="form-nombrar" class="columnas" style="gap:8px">
+      <label class="campo"><span>Aparato (como figura ahora)</span><input id="nombrar-aparato" placeholder="WiZ ESP25…" list="lista-alias"></label>
+      <label class="campo"><span>Nombre nuevo</span><input id="nombrar-nombre" placeholder="luz del living"></label>
+      <datalist id="lista-alias"></datalist>
+      <div class="acciones-botones" style="align-self:end"><button class="primario">Guardar</button></div>
+    </form>
+  </div>
+</section>
+
+<!-- ============ MEMORIA ============ -->
+<section class="tab" id="tab-memoria">
+  <div class="columnas">
+    <div class="tarjeta">
+      <h2>Lo que sabe de vos</h2>
+      <form id="form-recordar" class="barra-herr"><input id="recordar-texto" placeholder="mi hermana se llama Laura" autocomplete="off"><button class="primario">Recordar</button></form>
+      <ul class="lista" id="lista-datos"></ul>
+    </div>
+    <div class="tarjeta">
+      <h2>Lecciones aprendidas</h2>
+      <p class="suave chico-txt" style="margin:0 0 6px">Lo que entendió de tus correcciones. Las tiene en cuenta, no se disparan solas.</p>
+      <ul class="lista" id="lista-lecciones"></ul>
+    </div>
+    <div class="tarjeta">
+      <h2>Últimos mensajes</h2>
+      <div class="consola" id="historial"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ REGISTRO ============ -->
+<section class="tab" id="tab-registro">
+  <div class="barra-herr">
+    <select id="reg-n"><option>50</option><option selected>200</option><option>500</option><option>1000</option></select>
+    <label class="fila" style="margin:0"><input type="checkbox" id="reg-auto" checked> Actualizar solo cada 5 s</label>
+    <button class="chico" id="reg-ahora">Actualizar</button>
+  </div>
+  <div class="columnas">
+    <div class="tarjeta"><h2>Registro del día <span class="suave chico-txt" id="reg-archivo"></span></h2><pre id="reg-registro" class="consola" style="max-height:60vh"></pre></div>
+    <div class="tarjeta"><h2>Log del agente</h2><pre id="reg-log" class="consola" style="max-height:60vh"></pre></div>
+  </div>
+</section>
+
+</main>
+
+<div id="resultado" class="oculto">
+  <div class="crece"><span class="quien" id="res-quien"></span><span id="res-texto"></span></div>
+  <div style="display:flex;flex-direction:column;gap:6px" id="res-botones"></div>
+  <button class="chico" id="res-cerrar" title="Cerrar">×</button>
+</div>
+<div id="modal" class="oculto">
+  <div class="caja">
+    <div class="cabeza"><b id="modal-titulo"></b><button class="chico" id="modal-cerrar">×</button></div>
+    <div class="cuerpo"><pre id="modal-cuerpo"></pre></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $ = (s, raiz) => (raiz || document).querySelector(s);
+const $$ = (s, raiz) => Array.from((raiz || document).querySelectorAll(s));
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const DIAS = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"];
+const CAT = {};          // nombre -> entrada del catálogo
+let GRUPOS = [];
+let ESTADO = {};
+let tabActiva = "inicio";
+
+// ---------- API ----------
+async function api(ruta, opciones) {
+  const o = Object.assign({metodo: "GET", cuerpo: null, silencio: false}, opciones || {});
+  const init = {method: o.metodo, headers: {}};
+  if (o.metodo !== "GET") {
+    init.headers["X-Cerebro-Panel"] = "1";
+    init.headers["Content-Type"] = "application/json";
+    init.body = JSON.stringify(o.cuerpo || {});
+  }
+  let r;
+  try {
+    r = await fetch("/api/" + ruta, init);
+  } catch (e) {
+    if (!o.silencio) mostrar("No llego al agente. ¿Está corriendo Cerebro en la PC?", false, "panel");
+    return {ok: false, error: "sin conexión", _estado: 0};
+  }
+  if (r.status === 401) { location.reload(); return {ok: false, error: "sin acceso", _estado: 401}; }
+  let datos;
+  try { datos = await r.json(); } catch (e) { datos = {ok: false, error: "Respuesta rara del agente (" + r.status + ")."}; }
+  datos._estado = r.status;
+  if (!r.ok && !o.silencio && datos.error && !datos.confirmar) mostrar(datos.error, false, "panel");
+  return datos;
+}
+
+// ---------- resultado (barra + consola) ----------
+let temporizadorRes = null;
+function mostrar(texto, ok, quien, botones) {
+  texto = String(texto == null ? "" : texto).trim() || (ok ? "Listo." : "No pudo.");
+  const caja = $("#resultado");
+  caja.classList.remove("oculto");
+  caja.classList.toggle("err", ok === false);
+  $("#res-quien").textContent = quien || "";
+  $("#res-texto").textContent = texto;
+  const cont = $("#res-botones");
+  cont.innerHTML = "";
+  if (texto.length > 400) {
+    const b = document.createElement("button"); b.className = "chico"; b.textContent = "Ver completo";
+    b.onclick = () => modal(quien || "Resultado", texto); cont.appendChild(b);
+  }
+  (botones || []).forEach((bt) => {
+    const b = document.createElement("button"); b.className = "chico primario"; b.textContent = bt.texto; b.onclick = bt.accion; cont.appendChild(b);
+  });
+  consola(quien || "", texto, ok);
+  clearTimeout(temporizadorRes);
+  if (ok !== false && !(botones && botones.length)) temporizadorRes = setTimeout(() => caja.classList.add("oculto"), 12000);
+}
+$("#res-cerrar").onclick = () => $("#resultado").classList.add("oculto");
+function consola(quien, texto, ok, mio) {
+  const c = $("#consola");
+  const vacio = $(".vacio", c); if (vacio) vacio.remove();
+  const hora = new Date().toLocaleTimeString("es-AR", {hour: "2-digit", minute: "2-digit"});
+  const d = document.createElement("div");
+  if (mio) { d.className = "yo"; d.innerHTML = "› " + esc(texto) + '<span class="hora">' + hora + "</span>"; }
+  else { d.className = "el"; d.innerHTML = (quien ? '<span class="suave">[' + esc(quien) + "] </span>" : "") + esc(texto) +
+         (ok === false ? ' <span class="suave">(no pudo)</span>' : "") + '<span class="hora">' + hora + "</span>"; }
+  c.appendChild(d);
+  while (c.children.length > 60) c.removeChild(c.firstChild);
+  c.scrollTop = c.scrollHeight;
+}
+function modal(titulo, texto) {
+  $("#modal-titulo").textContent = titulo; $("#modal-cuerpo").textContent = texto; $("#modal").classList.remove("oculto");
+}
+$("#modal-cerrar").onclick = () => $("#modal").classList.add("oculto");
+$("#modal").addEventListener("click", (e) => { if (e.target.id === "modal") $("#modal").classList.add("oculto"); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") $("#modal").classList.add("oculto"); });
+
+// ---------- tema ----------
+(function () {
+  let guardado = null;
+  try { guardado = localStorage.getItem("cerebro_tema"); } catch (e) {}
+  if (guardado) document.documentElement.dataset.tema = guardado;
+  $("#btn-tema").onclick = () => {
+    const oscuroAhora = document.documentElement.dataset.tema ? document.documentElement.dataset.tema === "oscuro"
+                        : matchMedia("(prefers-color-scheme: dark)").matches;
+    const nuevo = oscuroAhora ? "claro" : "oscuro";
+    document.documentElement.dataset.tema = nuevo;
+    try { localStorage.setItem("cerebro_tema", nuevo); } catch (e) {}
+  };
+})();
+
+// ---------- pestañas ----------
+function pestana(nombre) {
+  tabActiva = nombre;
+  $$("#pestanas button").forEach((b) => b.classList.toggle("activa", b.dataset.tab === nombre));
+  $$("section.tab").forEach((s) => s.classList.toggle("activa", s.id === "tab-" + nombre));
+  try { history.replaceState(null, "", "#" + nombre); } catch (e) {}
+  refrescar(true);
+}
+$$("#pestanas button").forEach((b) => b.onclick = () => pestana(b.dataset.tab));
+
+// ---------- formularios generados desde el catálogo ----------
+function campoHtml(c, prefijo) {
+  const id = prefijo + "-" + c.nombre;
+  const etiqueta = '<span class="' + (c.obligatorio ? "obligatorio" : "") + '">' + esc(c.etiqueta) + "</span>";
+  const ayuda = c.ayuda ? '<div class="ayuda">' + esc(c.ayuda) + "</div>" : "";
+  const def = c.valor_defecto == null ? "" : c.valor_defecto;
+  if (c.tipo === "booleano")
+    return '<label class="fila"><input type="checkbox" id="' + id + '" data-campo="' + esc(c.nombre) + '"' + (def === true ? " checked" : "") + "> " + esc(c.etiqueta) + "</label>" + ayuda;
+  if (c.tipo === "opciones") {
+    const ops = c.opciones.map((o) => { const v = Array.isArray(o) ? o[0] : o, t = Array.isArray(o) ? o[1] : o;
+      return '<option value="' + esc(v) + '"' + (String(v) === String(def) ? " selected" : "") + ">" + esc(t) + "</option>"; }).join("");
+    return '<label class="campo">' + etiqueta + '<select id="' + id + '" data-campo="' + esc(c.nombre) + '">' + ops + "</select>" + ayuda + "</label>";
+  }
+  if (c.tipo === "dias")
+    return '<label class="campo">' + etiqueta + "</label>" + diasHtml(id, c.nombre) + ayuda;
+  if (c.tipo === "texto_largo")
+    return '<label class="campo">' + etiqueta + '<textarea id="' + id + '" rows="2" data-campo="' + esc(c.nombre) + '">' + esc(def) + "</textarea>" + ayuda + "</label>";
+  const tipo = c.tipo === "numero" ? "number" : c.tipo === "hora" ? "time" : "text";
+  const extra = c.tipo === "numero" ? ' step="any"' : c.tipo === "lista" ? ' placeholder="separá con comas"' : "";
+  return '<label class="campo">' + etiqueta + '<input type="' + tipo + '" id="' + id + '" data-campo="' + esc(c.nombre) + '" value="' + esc(def) + '"' + extra + ">" + ayuda + "</label>";
+}
+function diasHtml(id, nombre) {
+  return '<div class="dias" id="' + id + '" data-campo="' + esc(nombre) + '" data-dias="1">' + DIAS.map((d) =>
+    '<label><input type="checkbox" value="' + d + '"> ' + d.slice(0, 3) + "</label>").join("") +
+    '<button type="button" class="chico lisa" data-lv="1">L a V</button><button type="button" class="chico lisa" data-todos="1">todos</button></div>';
+}
+function formularioHtml(entrada, prefijo) {
+  return entrada.campos.map((c) => campoHtml(c, prefijo)).join("");
+}
+function leerDatos(contenedor, entrada) {
+  const datos = {};
+  let faltan = [];
+  entrada.campos.forEach((c) => {
+    const el = $('[data-campo="' + c.nombre + '"]', contenedor);
+    if (!el) return;
+    el.classList.remove("invalido");
+    let v;
+    if (c.tipo === "booleano") { v = el.checked; if (!v && c.valor_defecto == null) v = undefined; }
+    else if (c.tipo === "dias") v = $$("input:checked", el).map((i) => i.value);
+    else if (c.tipo === "lista") v = el.value.split(/[,\n]/).map((x) => x.trim()).filter(Boolean);
+    else if (c.tipo === "numero") v = el.value.trim() === "" ? undefined : Number(el.value);
+    else v = el.value.trim();
+    const vacio = v === undefined || v === "" || (Array.isArray(v) && !v.length) || (typeof v === "number" && isNaN(v));
+    if (vacio) { if (c.obligatorio) { faltan.push(c.etiqueta); el.classList.add("invalido"); } return; }
+    datos[c.nombre] = v;
+  });
+  return {datos, faltan};
+}
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-lv],[data-todos]");
+  if (!b) return;
+  const caja = b.closest("[data-dias]");
+  $$("input", caja).forEach((i, n) => i.checked = b.dataset.todos ? true : n < 5);
+});
+
+// ---------- ejecutar una acción ----------
+function esPeligrosa(nombre, datos) {
+  const e = CAT[nombre];
+  if (!e || !e.peligrosa) return false;
+  if (e.peligrosa_si) { const campo = Object.keys(e.peligrosa_si)[0]; return e.peligrosa_si[campo].includes(String(datos[campo] || "").toLowerCase()); }
+  return true;
+}
+async function ejecutar(nombre, datos, boton, opciones) {
+  datos = datos || {};
+  const e = CAT[nombre] || {etiqueta: nombre};
+  if (esPeligrosa(nombre, datos) && !(opciones && opciones.confirmado)) {
+    if (!confirm("¿Seguro? " + e.etiqueta + (datos.orden ? ": " + datos.orden : "") + ".")) return null;
+  }
+  if (boton) { boton.disabled = true; boton.dataset.texto = boton.textContent; boton.textContent = "…"; }
+  const r = await api("ejecutar", {metodo: "POST", cuerpo: {accion: nombre, datos: datos, confirmar: true}});
+  if (boton) { boton.disabled = false; boton.textContent = boton.dataset.texto; }
+  if (r._estado !== 200) { if (r.confirmar) mostrar(r.error, false, e.etiqueta); return r; }   // los demás errores ya los mostró api()
+  const botones = [];
+  if (r.ok && r.confirma_con && CAT[r.confirma_con])
+    botones.push({texto: "Confirmar envío", accion: () => ejecutar(r.confirma_con, {}, null, {confirmado: true})});
+  if (r.ok && e.resultado === "largo" && r.texto && r.texto.length > 160) modal(e.etiqueta, r.texto);
+  mostrar(r.texto, r.ok, e.etiqueta, botones);
+  cargarEstado();
+  if (["nota", "compras", "completar_pendiente"].includes(nombre) && tabActiva === "notas") cargarNotas();
+  if (["programar", "borrar_programado", "alertas", "resumen_manana"].includes(nombre) && tabActiva === "automatizaciones") cargarAutomatizaciones();
+  if (["recordar", "olvidar", "aprender"].includes(nombre) && tabActiva === "memoria") cargarMemoria();
+  return r;
+}
+
+// ---------- INICIO ----------
+const RAPIDOS = [
+  ["Pendientes", "pendientes", {}], ["Lista de compras", "compras", {}], ["Dólar", "dolar", {}], ["Clima", "clima", {}],
+  ["Salud de la PC", "salud_pc", {}], ["Captura al celular", "captura", {}], ["¿Qué está sonando?", "musica_control", {accion: "que_suena"}],
+  ["Pausar música", "musica_control", {accion: "pausa"}], ["Agenda de hoy", "agenda", {cuando: "hoy"}], ["Mails", "mails", {}],
+  ["¿Qué sabés de mí?", "que_sabes", {}], ["Bloquear la PC", "sistema", {orden: "bloquear"}],
+];
+function pintarRapidos() {
+  const c = $("#rapidos"); c.innerHTML = "";
+  RAPIDOS.forEach(([t, a, d]) => { const b = document.createElement("button"); b.textContent = t; b.onclick = () => ejecutar(a, d, b); c.appendChild(b); });
+  const ver = document.createElement("button"); ver.textContent = "Ver el resumen del día"; ver.onclick = () => resumenVer(ver); c.appendChild(ver);
+}
+function chip(texto, clase) { return '<span class="chip ' + (clase || "") + '">' + esc(texto) + "</span>"; }
+function sino(v, si, no, nd) { return v == null ? (nd || "n/d") : (v ? (si || "sí") : (no || "no")); }
+function pintarEstado(s) {
+  const chips = [chip("v" + s.version), chip("internet " + sino(s.internet), s.internet == null ? "" : s.internet ? "ok" : "err"),
+    chip("Telegram " + (s.telegram.token ? (s.telegram.chat ? "ok" : "sin chat") : "sin token"), s.telegram.token && s.telegram.chat ? "ok" : "aviso"),
+    chip("Claude Code " + sino(s.claude), s.claude ? "ok" : "aviso"), chip("Gemini " + sino(s.gemini), s.gemini ? "ok" : "aviso")];
+  if (s.tareas.length) chips.push(chip(s.tareas.length + " tarea(s) en curso", "aviso"));
+  $("#chips").innerHTML = chips.join("");
+  const st = (b, v) => '<div class="stat"><b>' + esc(b) + "</b><span>" + esc(v) + "</span></div>";
+  $("#stats").innerHTML = [
+    st("Equipo", s.equipo || "n/d"), st("Hora de la PC", s.hora), st("Prendida hace", s.encendida || "n/d"),
+    st("Disco C libre", s.disco ? s.disco.libre_gb + " de " + s.disco.total_gb + " GB" : "n/d"),
+    st("Memoria", s.memoria_pct == null ? "n/d" : s.memoria_pct + " %"), st("Procesador", s.cpu_pct == null ? "n/d" : s.cpu_pct + " %"),
+    st("Internet", sino(s.internet, "sí", "no")), st("Última señal del agente", s.latido || "n/d"),
+    st("Telegram", s.telegram.token ? (s.telegram.chat ? "conectado" : "falta /start al bot") : "sin configurar"),
+    st("Claude Code", sino(s.claude, "instalado", "no está")), st("Agenda", sino(s.agenda, "conectada", "sin conectar")),
+    st("Gmail", sino(s.mails, "conectado", "sin conectar")), st("Pendientes", s.pendientes), st("Compras", s.compras + " ítems"),
+    st("Automatizaciones", s.programados), st("Versión del agente", s.version),
+  ].join("");
+  $("#n-prog").textContent = s.programados || ""; $("#n-pend").textContent = s.pendientes || ""; $("#n-tareas").textContent = s.tareas.length || "";
+  const avisos = [];
+  if (s.plan_pendiente) avisos.push('<div class="alerta"><span class="crece">Hay un plan de Claude esperando tu aprobación: <b>' + esc(s.plan_pendiente.instruccion) + '</b></span><button class="chico" onclick="pestana(\'tareas\')">Ver el plan</button></div>');
+  if (s.whatsapp_pendiente) avisos.push('<div class="alerta"><span class="crece">WhatsApp preparado para <b>' + esc(s.whatsapp_pendiente.contacto) + "</b>: " + esc(s.whatsapp_pendiente.mensaje || s.whatsapp_pendiente.archivo) + '</span><button class="chico primario" onclick="ejecutar(\'whatsapp_confirmar\', {}, this, {confirmado: true})">Confirmar envío</button></div>');
+  if (s.sistema_pendiente) avisos.push('<div class="alerta"><span class="crece">Pediste <b>' + esc(s.sistema_pendiente) + '</b> la PC por Telegram y está esperando el "sí".</span></div>');
+  s.tareas.forEach((t) => avisos.push('<div class="alerta"><span class="crece">Claude está trabajando: <b>' + esc(t.descripcion) + "</b> · " + esc(t.ultimo) + ' <span class="suave">(' + duracion(t.segundos) + ')</span></span><button class="chico" onclick="pestana(\'tareas\')">Ver</button></div>'));
+  $("#avisos-inicio").innerHTML = avisos.join("");
+}
+function duracion(seg) { seg = Math.max(0, seg | 0); return seg < 60 ? seg + " s" : seg < 3600 ? Math.round(seg / 60) + " min" : (seg / 3600).toFixed(1) + " h"; }
+async function cargarEstado() {
+  const s = await api("estado", {silencio: true});
+  if (!s.ok) { $("#chips").innerHTML = chip("sin conexión con el agente", "err"); return; }
+  ESTADO = s; pintarEstado(s);
+}
+$("#form-orden").onsubmit = async (e) => {
+  e.preventDefault();
+  const inp = $("#orden-texto"), texto = inp.value.trim();
+  if (!texto) return;
+  consola("", texto, true, true); inp.value = "";
+  const b = $("button", e.target); b.disabled = true;
+  const r = await api("orden", {metodo: "POST", cuerpo: {texto}});
+  b.disabled = false;
+  if (r._estado === 200) mostrar(r.texto, r.ok, "Cerebro");
+  cargarEstado();
+};
+
+// ---------- ACCIONES ----------
+async function cargarAcciones() {
+  const r = await api("acciones");
+  if (!r.ok) return;
+  GRUPOS = r.grupos;
+  r.acciones.forEach((a) => CAT[a.nombre] = a);
+  $("#grupo-accion").innerHTML = '<option value="">Todos los grupos</option>' + GRUPOS.map((g) => '<option>' + esc(g) + "</option>").join("");
+  const sel = $("#prog-accion");
+  sel.innerHTML = GRUPOS.map((g) => '<optgroup label="' + esc(g) + '">' + r.acciones.filter((a) => a.grupo === g).map((a) =>
+    '<option value="' + esc(a.nombre) + '">' + esc(a.etiqueta) + "</option>").join("") + "</optgroup>").join("");
+  const cat = $("#catalogo"); cat.innerHTML = "";
+  r.acciones.forEach((a) => {
+    const t = document.createElement("div");
+    t.className = "tarjeta"; t.dataset.nombre = a.nombre; t.dataset.grupo = a.grupo;
+    t.dataset.busca = (a.nombre + " " + a.etiqueta + " " + a.descripcion + " " + a.ejemplos.join(" ")).toLowerCase();
+    t.innerHTML = "<h3>" + esc(a.etiqueta) + '<span class="etiqueta">' + esc(a.grupo) + "</span>" +
+      (a.peligrosa ? '<span class="etiqueta peligro">pide confirmación</span>' : "") + "</h3>" +
+      '<div class="chico-txt">' + esc(a.descripcion) + "</div>" +
+      (a.ejemplos.length ? '<div class="ejemplos">' + a.ejemplos.map((x) => "“" + esc(x) + "”").join(" · ") + "</div>" : "") +
+      '<div class="form">' + formularioHtml(a, "acc-" + a.nombre) + "</div>" +
+      '<div class="acciones-botones"><button class="primario" data-ejecutar="1">Ejecutar</button><button data-automatizar="1">Automatizar</button>' +
+      '<span class="suave chico-txt mono" style="align-self:center">' + esc(a.nombre) + "</span></div>";
+    cat.appendChild(t);
+  });
+  filtrarAcciones();
+}
+function filtrarAcciones() {
+  const q = $("#buscar-accion").value.trim().toLowerCase(), g = $("#grupo-accion").value;
+  let n = 0;
+  $$("#catalogo .tarjeta").forEach((t) => { const ok = (!g || t.dataset.grupo === g) && (!q || t.dataset.busca.includes(q)); t.classList.toggle("oculto", !ok); if (ok) n++; });
+  $("#cuenta-acciones").textContent = n + " acciones";
+}
+$("#buscar-accion").oninput = filtrarAcciones; $("#grupo-accion").onchange = filtrarAcciones;
+$("#catalogo").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  const t = b.closest(".tarjeta"), a = CAT[t.dataset.nombre];
+  const {datos, faltan} = leerDatos($(".form", t), a);
+  if (faltan.length) { mostrar("Falta completar: " + faltan.join(", ") + ".", false, a.etiqueta); return; }
+  if (b.dataset.ejecutar) ejecutar(a.nombre, datos, b);
+  if (b.dataset.automatizar) automatizar(a.nombre, datos);
+});
+
+// ---------- AUTOMATIZACIONES ----------
+$("#prog-dias").innerHTML = diasHtml("prog-dias-caja", "dias").replace('class="dias"', 'class="dias" style="display:contents"');
+function progTipo() {
+  const t = $("#prog-tipo").value;
+  $("#prog-campo-texto").classList.toggle("oculto", t === "accion");
+  $("#prog-campo-accion").classList.toggle("oculto", t !== "accion");
+  if (t === "accion") progFormAccion();
+}
+function progFormAccion(datos) {
+  const a = CAT[$("#prog-accion").value];
+  $("#prog-form-accion").innerHTML = a ? formularioHtml(a, "prog") : "";
+  if (a && datos) Object.keys(datos).forEach((k) => {
+    const el = $('[data-campo="' + k + '"]', $("#prog-form-accion")); if (!el) return;
+    const c = a.campos.find((x) => x.nombre === k);
+    if (c.tipo === "booleano") el.checked = !!datos[k];
+    else if (c.tipo === "dias") $$("input", el).forEach((i) => i.checked = datos[k].includes(i.value));
+    else if (c.tipo === "lista") el.value = datos[k].join(", ");
+    else el.value = datos[k];
+  });
+}
+function progCuando() {
+  const c = $("#prog-cuando").value;
+  $("#prog-bloque-hora").classList.toggle("oculto", c !== "hora");
+  $("#prog-bloque-cada").classList.toggle("oculto", c !== "cada");
+  $("#prog-bloque-en").classList.toggle("oculto", c !== "en");
+}
+$("#prog-tipo").onchange = progTipo; $("#prog-accion").onchange = () => progFormAccion(); $("#prog-cuando").onchange = progCuando;
+function automatizar(nombre, datos) {
+  pestana("automatizaciones");
+  $("#prog-tipo").value = "accion"; progTipo();
+  $("#prog-accion").value = nombre; progFormAccion(datos);
+  $("#prog-nombre").value = "";
+  $("#prog-form-accion").scrollIntoView({behavior: "smooth", block: "center"});
+  mostrar("Elegí cuándo y tocá Programar: la PC va a hacer «" + CAT[nombre].etiqueta + "» sola.", true, "Automatizar");
+}
+$("#form-prog").onsubmit = async (e) => {
+  e.preventDefault();
+  const tipo = $("#prog-tipo").value, cuerpo = {};
+  if (tipo === "accion") {
+    const a = CAT[$("#prog-accion").value];
+    const {datos, faltan} = leerDatos($("#prog-form-accion"), a);
+    if (faltan.length) { mostrar("Falta completar: " + faltan.join(", ") + ".", false, a.etiqueta); return; }
+    cuerpo.accion = a.nombre; cuerpo.datos = datos; cuerpo.tipo = "orden";
+    if ($("#prog-nombre").value.trim()) cuerpo.texto = $("#prog-nombre").value.trim();
+  } else {
+    cuerpo.texto = $("#prog-texto").value.trim(); cuerpo.tipo = tipo;
+    if (!cuerpo.texto) { mostrar("Falta el texto.", false, "Programar"); return; }
+  }
+  const cuando = $("#prog-cuando").value;
+  if (cuando === "hora") {
+    cuerpo.hora = $("#prog-hora").value; cuerpo.dias = $$("#prog-dias input:checked").map((i) => i.value);
+    if ($("#prog-una-vez").checked) cuerpo.frecuencia = "una_vez";
+    if (!cuerpo.hora) { mostrar("Falta la hora.", false, "Programar"); return; }
+  } else if (cuando === "cada") {
+    cuerpo.cada_minutos = Number($("#prog-cada").value); cuerpo.desde = $("#prog-desde").value; cuerpo.hasta = $("#prog-hasta").value;
+  } else cuerpo.en_minutos = Number($("#prog-en").value);
+  const r = await api("programados", {metodo: "POST", cuerpo});
+  if (r._estado === 200) { mostrar(r.texto, r.ok, "Programar"); pintarProgramados(r.programados); cargarEstado(); }
+};
+function pintarProgramados(lista) {
+  const ul = $("#lista-prog");
+  if (!lista.length) { ul.innerHTML = '<li class="vacio">No hay nada programado. Armá una desde la izquierda o desde "Automatizar" en cualquier acción.</li>'; return; }
+  ul.innerHTML = lista.map((p) => '<li><div class="crece"><b>' + esc(p.texto) + "</b> " +
+    '<span class="etiqueta">' + (p.accion ? "acción: " + esc(p.accion) : p.tipo === "orden" ? "orden" : "aviso") + "</span>" +
+    (p.una_vez ? '<span class="etiqueta">una vez</span>' : "") +
+    '<div class="chico-txt suave">' + esc(p.cuando) + (p.proximo_texto ? " · próximo: " + esc(p.proximo_texto) + (p.faltan_seg != null && p.faltan_seg > 0 ? " (en " + duracion(p.faltan_seg) + ")" : "") : "") + "</div>" +
+    (p.accion && p.datos && Object.keys(p.datos).length ? '<div class="mono suave chico-txt">' + esc(JSON.stringify(p.datos)) + "</div>" : "") + "</div>" +
+    '<button class="chico" data-ejec="' + esc(p.id) + '">Ejecutar ahora</button><button class="chico peligro" data-borrar="' + esc(p.id) + '">Borrar</button></li>').join("");
+}
+$("#lista-prog").addEventListener("click", async (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  b.disabled = true;
+  if (b.dataset.ejec) { const r = await api("programados/" + b.dataset.ejec + "/ejecutar", {metodo: "POST"}); if (r._estado === 200) mostrar(r.texto, r.ok, "Ejecutar ahora"); }
+  if (b.dataset.borrar) { const r = await api("programados/" + b.dataset.borrar, {metodo: "DELETE"}); if (r.ok) { pintarProgramados(r.programados); mostrar("Borrado.", true, "Automatizaciones"); cargarEstado(); } }
+  b.disabled = false;
+});
+function pintarAlertas(r) {
+  $("#lista-alertas").innerHTML = Object.keys(r.nombres).map((k) => '<div class="toggle"><span>Alertas ' + esc(r.nombres[k]) +
+    (r.faltan[k] ? ' <span class="etiqueta">falta conectarla</span>' : "") + '</span><label class="switch"><input type="checkbox" data-alerta="' + k + '"' + (r.alertas[k] ? " checked" : "") + "><i></i></label></div>").join("");
+}
+$("#lista-alertas").addEventListener("change", async (e) => {
+  const i = e.target; if (!i.dataset.alerta) return;
+  const r = await api("alertas", {metodo: "POST", cuerpo: {tipo: i.dataset.alerta, activar: i.checked}});
+  if (r._estado === 200) { mostrar(r.texto, r.ok, "Alertas"); pintarAlertas(r); }
+});
+function pintarResumen(c) {
+  $("#res-hora").value = c.hora || "08:00"; $("#res-dias").value = c.dias === "semana" ? "semana" : "todos";
+  $("#res-equipo").value = c.equipo || ""; $("#res-activo").checked = !!c.activo;
+}
+$("#form-resumen").onsubmit = async (e) => {
+  e.preventDefault();
+  const r = await api("resumen", {metodo: "POST", cuerpo: {hora: $("#res-hora").value, dias: $("#res-dias").value, equipo: $("#res-equipo").value, activar: $("#res-activo").checked}});
+  if (r._estado === 200) { mostrar(r.texto, r.ok, "Resumen"); pintarResumen(r.resumen); }
+};
+async function resumenVer(b) {
+  if (b) b.disabled = true;
+  const r = await api("resumen/vista", {metodo: "POST"});
+  if (b) b.disabled = false;
+  if (r._estado === 200) { if (r.ok) modal("Resumen del día", r.texto); mostrar(r.ok ? "Este sería el resumen de ahora." : r.texto, r.ok, "Resumen"); }
+}
+$("#res-ver").onclick = (e) => resumenVer(e.target);
+$("#res-mandar").onclick = async (e) => { e.target.disabled = true; const r = await api("resumen/mandar", {metodo: "POST"}); e.target.disabled = false; if (r._estado === 200) mostrar(r.texto, r.ok, "Resumen"); };
+async function cargarAutomatizaciones() {
+  const [p, a, r] = await Promise.all([api("programados", {silencio: true}), api("alertas", {silencio: true}), api("resumen", {silencio: true})]);
+  if (p.ok) pintarProgramados(p.programados);
+  if (a.ok) pintarAlertas(a);
+  if (r.ok && document.activeElement.form !== $("#form-resumen")) pintarResumen(r.resumen);
+}
+
+// ---------- NOTAS ----------
+function pintarNotas(r) {
+  $("#notas-carpeta").textContent = "Archivos Markdown en " + r.carpeta;
+  const abiertos = r.pendientes.filter((p) => !p.hecho), hechos = r.pendientes.filter((p) => p.hecho);
+  $("#lista-pend").innerHTML = abiertos.length ? abiertos.map((p) => '<li><input type="checkbox" data-completar="' + esc(p.texto) + '" title="Marcar como hecho"><span class="crece">' + esc(p.texto) + "</span></li>").join("")
+    : '<li class="vacio">No tenés pendientes.</li>';
+  $("#lista-hechos").innerHTML = hechos.slice(-30).reverse().map((p) => '<li class="hecho"><span class="crece">' + esc(p.texto) + "</span></li>").join("") || '<li class="vacio">Nada todavía.</li>';
+  $("#lista-compras").innerHTML = r.compras.length ? r.compras.map((c) => '<li><span class="crece">' + esc(c) + '</span><button class="chico lisa" data-quitar="' + esc(c) + '" title="Sacar">×</button></li>').join("") : '<li class="vacio">La lista está vacía.</li>';
+  $("#lista-inbox").innerHTML = r.inbox.length ? r.inbox.map((n) => '<li><span class="crece">' + esc(n).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>") + "</span></li>").join("") : '<li class="vacio">Inbox vacío.</li>';
+  $("#n-pend").textContent = abiertos.length || "";
+}
+async function cargarNotas() { const r = await api("notas", {silencio: true}); if (r.ok) pintarNotas(r); }
+$("#form-pend").onsubmit = async (e) => { e.preventDefault(); const t = $("#pend-texto").value.trim(); if (!t) return;
+  const r = await api("pendientes", {metodo: "POST", cuerpo: {agregar: t}}); if (r._estado === 200) { $("#pend-texto").value = ""; mostrar(r.texto, r.ok, "Pendientes"); cargarNotas(); } };
+$("#lista-pend").addEventListener("change", async (e) => { const i = e.target; if (!i.dataset.completar) return;
+  const r = await api("pendientes", {metodo: "POST", cuerpo: {completar: i.dataset.completar}}); if (r._estado === 200) mostrar(r.texto, r.ok, "Pendientes"); cargarNotas(); });
+$("#form-compras").onsubmit = async (e) => { e.preventDefault(); const t = $("#compras-texto").value.trim(); if (!t) return;
+  const r = await api("compras", {metodo: "POST", cuerpo: {agregar: t.split(/[,\n]/).map((x) => x.trim()).filter(Boolean)}}); if (r._estado === 200) { $("#compras-texto").value = ""; mostrar(r.texto, r.ok, "Compras"); cargarNotas(); } };
+$("#lista-compras").addEventListener("click", async (e) => { const b = e.target.closest("[data-quitar]"); if (!b) return;
+  const r = await api("compras", {metodo: "POST", cuerpo: {quitar: [b.dataset.quitar]}}); if (r._estado === 200) mostrar(r.texto, r.ok, "Compras"); cargarNotas(); });
+$("#compras-vaciar").onclick = async () => { if (!confirm("¿Vaciar la lista de compras?")) return; const r = await api("compras", {metodo: "POST", cuerpo: {vaciar: true}}); if (r._estado === 200) mostrar(r.texto, r.ok, "Compras"); cargarNotas(); };
+$("#compras-celular").onclick = async (e) => { e.target.disabled = true; const r = await api("compras", {metodo: "POST", cuerpo: {al_celular: true}}); e.target.disabled = false; if (r._estado === 200) mostrar("Lista mandada al celular. " + r.texto, r.ok, "Compras"); };
+$("#form-nota").onsubmit = async (e) => { e.preventDefault(); const t = $("#nota-texto").value.trim(); if (!t) return;
+  const r = await api("notas", {metodo: "POST", cuerpo: {texto: t, categoria: $("#nota-cat").value}}); if (r._estado === 200) { $("#nota-texto").value = ""; mostrar(r.texto, r.ok, "Inbox"); cargarNotas(); } };
+
+// ---------- TAREAS ----------
+function pintarTareas(r) {
+  $("#aviso-claude").innerHTML = r.claude ? "" : '<div class="alerta"><span class="crece">No encontré Claude Code en esta PC. Instalalo con <b>instalar-claude.bat</b> e iniciá sesión una vez con <b>claude</b> en una terminal.</span></div>';
+  $("#lista-tareas").innerHTML = r.activas.length ? r.activas.map((t) => '<li><div class="crece"><b>' + esc(t.descripcion) + '</b><div class="progreso">' + esc(t.ultimo) + " · hace " + duracion(t.segundos) + (t.cancelada ? " · frenando" : "") + "</div></div></li>").join("") +
+    '<li><button class="chico peligro" id="tareas-cancelar">Frenar todo</button></li>' : '<li class="vacio">No hay tareas en curso.</li>';
+  $("#tarjeta-plan").classList.toggle("oculto", !r.plan);
+  if (r.plan) { $("#plan-instruccion").innerHTML = "<b>" + esc(r.plan.instruccion) + '</b> <span class="suave chico-txt">(' + esc(r.plan.cuando) + ")</span>"; $("#plan-texto").textContent = r.plan.plan; }
+  $("#lista-informes").innerHTML = r.informes.length ? r.informes.map((i) => '<li><span class="crece"><a href="#" data-informe="' + esc(i.nombre) + '">' + esc(i.titulo) + '</a><div class="chico-txt suave">' + esc(i.fecha) + " · " + esc(i.nombre) + "</div></span></li>").join("") : '<li class="vacio">Todavía no hay informes. Quedan en la carpeta Tareas de tus notas.</li>';
+  $("#n-tareas").textContent = r.activas.length || "";
+}
+async function cargarTareas() { const r = await api("tareas", {silencio: true}); if (r.ok) pintarTareas(r); }
+$("#form-tarea").onsubmit = async (e) => {
+  e.preventDefault(); const t = $("#tarea-texto").value.trim(); if (!t) return;
+  const modo = $('input[name="modo"]:checked').value, b = $("button", e.target); b.disabled = true;
+  const r = await api("tareas", {metodo: "POST", cuerpo: {instruccion: t, modo}}); b.disabled = false;
+  if (r._estado === 200) { mostrar(r.texto, r.ok, "Tarea"); if (r.ok) $("#tarea-texto").value = ""; cargarTareas(); }
+};
+$("#lista-tareas").addEventListener("click", async (e) => { if (e.target.id !== "tareas-cancelar") return; if (!confirm("¿Frenar las tareas en curso?")) return;
+  const r = await api("tareas/cancelar", {metodo: "POST"}); if (r._estado === 200) mostrar(r.texto, r.ok, "Tareas"); cargarTareas(); });
+$("#plan-aprobar").onclick = async (e) => { if (!confirm("¿Ejecutar el plan? Claude va a trabajar con permisos completos en la PC.")) return;
+  e.target.disabled = true; const r = await api("tareas/confirmar", {metodo: "POST", cuerpo: {confirmar: true}}); e.target.disabled = false; if (r._estado === 200) mostrar(r.texto, r.ok, "Plan"); cargarTareas(); };
+$("#plan-descartar").onclick = async () => { const r = await api("tareas/descartar", {metodo: "POST"}); if (r._estado === 200) mostrar(r.texto, r.ok, "Plan"); cargarTareas(); };
+$("#lista-informes").addEventListener("click", async (e) => { const a = e.target.closest("[data-informe]"); if (!a) return; e.preventDefault();
+  const r = await api("tareas/archivo?nombre=" + encodeURIComponent(a.dataset.informe)); if (r.ok) modal(r.nombre, r.contenido); });
+
+// ---------- CASA ----------
+let CASA = {dispositivos: [], colores: [], escenas: []};
+function pintarCasa(r) {
+  CASA = r;
+  $("#aviso-casa").innerHTML = r.disponible ? "" : '<div class="alerta"><span class="crece">' + esc(r.aviso) + "</span></div>";
+  $("#lista-alias").innerHTML = r.dispositivos.map((d) => '<option value="' + esc(d.alias) + '">').join("");
+  const ops = (l) => l.map((x) => "<option>" + esc(x) + "</option>").join("");
+  const tarjeta = (nombre, titulo, sub) => '<div class="tarjeta" data-disp="' + esc(nombre) + '"><h3>' + esc(titulo) + "</h3>" + (sub ? '<div class="chico-txt suave">' + sub + "</div>" : "") +
+    '<div class="acciones-botones"><button class="chico primario" data-casa="prender">Prender</button><button class="chico" data-casa="apagar">Apagar</button><button class="chico" data-casa="estado">¿Está prendida?</button></div>' +
+    '<label class="campo"><span>Brillo</span><div style="display:flex;gap:8px;align-items:center"><input type="range" min="1" max="100" value="60" class="brillo"><button class="chico" data-casa="brillo">Poner</button></div></label>' +
+    '<div class="columnas" style="gap:8px"><label class="campo"><span>Color</span><div style="display:flex;gap:6px"><select class="color">' + ops(r.colores) + '</select><button class="chico" data-casa="color">Ir</button></div></label>' +
+    '<label class="campo"><span>Escena</span><div style="display:flex;gap:6px"><select class="escena">' + ops(r.escenas) + '</select><button class="chico" data-casa="escena">Ir</button></div></label></div>' +
+    '<div class="acciones-botones"><button class="chico" data-casa="temperatura" data-valor="cálida">Cálida</button><button class="chico" data-casa="temperatura" data-valor="neutra">Neutra</button><button class="chico" data-casa="temperatura" data-valor="fría">Fría</button></div></div>';
+  const lista = r.dispositivos.map((d) => tarjeta(d.apodo || d.alias, d.apodo || d.amigable, esc(d.alias) + " · " + esc(d.marca) + (d.modelo ? " " + esc(d.modelo) : "") + " · " + esc(d.host)));
+  $("#lista-casa").innerHTML = (r.dispositivos.length > 1 ? tarjeta("luces", "Todas las luces", "Manda la orden a todos los dispositivos conocidos.") : "") + lista.join("") +
+    (r.dispositivos.length ? "" : tarjeta("luz", "La luz", "Todavía no hay dispositivos guardados: buscalos con el botón de arriba. Si hay uno solo en la red, «luz» alcanza."));
+}
+async function cargarCasa() { const r = await api("casa", {silencio: true}); if (r.ok) pintarCasa(r); }
+$("#lista-casa").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-casa]"); if (!b) return;
+  const t = b.closest("[data-disp]"), datos = {dispositivo: t.dataset.disp, accion: b.dataset.casa};
+  if (b.dataset.casa === "brillo") datos.valor = Number($(".brillo", t).value);
+  if (b.dataset.casa === "color") datos.valor = $(".color", t).value;
+  if (b.dataset.casa === "escena") datos.valor = $(".escena", t).value;
+  if (b.dataset.valor) datos.valor = b.dataset.valor;
+  ejecutar("casa", datos, b);
+});
+$("#casa-descubrir").onclick = (e) => ejecutar("casa_descubrir", {}, e.target).then(() => setTimeout(cargarCasa, 15000));
+$("#casa-todas-on").onclick = (e) => ejecutar("casa", {dispositivo: "luces", accion: "prender"}, e.target);
+$("#casa-todas-off").onclick = (e) => ejecutar("casa", {dispositivo: "luces", accion: "apagar"}, e.target);
+$("#form-nombrar").onsubmit = async (e) => { e.preventDefault(); const r = await ejecutar("nombrar_aparato", {aparato: $("#nombrar-aparato").value.trim(), nombre: $("#nombrar-nombre").value.trim()}, $("button", e.target)); if (r && r.ok) { $("#nombrar-nombre").value = ""; cargarCasa(); } };
+
+// ---------- MEMORIA ----------
+function pintarMemoria(r) {
+  $("#lista-datos").innerHTML = r.datos.length ? r.datos.map((d) => '<li><span class="crece">' + esc(d) + '</span><button class="chico lisa" data-olvidar="' + esc(d) + '">olvidar</button></li>').join("") : '<li class="vacio">Todavía no guardó nada sobre vos.</li>';
+  $("#lista-lecciones").innerHTML = r.lecciones.length ? r.lecciones.map((l) => { const m = l.match(/"(.+?)"/); return '<li><span class="crece">' + esc(l) + '</span><button class="chico lisa" data-olvidar-frase="' + esc(m ? m[1] : l) + '">olvidar</button></li>'; }).join("") : '<li class="vacio">Ninguna todavía. Si se equivoca, decile «no, lo que quería era…».</li>';
+  $("#historial").innerHTML = r.historial.length ? r.historial.map((h) => '<div class="' + (h.rol === "user" ? "yo" : "el") + '">' + (h.rol === "user" ? "› " : "") + esc(h.texto) + '<span class="hora">' + esc(h.cuando) + "</span></div>").join("") : '<div class="vacio">Sin mensajes todavía.</div>';
+}
+async function cargarMemoria() { const r = await api("memoria", {silencio: true}); if (r.ok) pintarMemoria(r); }
+$("#form-recordar").onsubmit = async (e) => { e.preventDefault(); const t = $("#recordar-texto").value.trim(); if (!t) return;
+  const r = await api("memoria/recordar", {metodo: "POST", cuerpo: {dato: t}}); if (r._estado === 200) { $("#recordar-texto").value = ""; mostrar(r.texto, r.ok, "Memoria"); pintarMemoria(r); } };
+$("#tab-memoria").addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-olvidar],[data-olvidar-frase]"); if (!b) return;
+  const r = b.dataset.olvidar != null ? await api("memoria/olvidar", {metodo: "POST", cuerpo: {dato: b.dataset.olvidar}})
+                                       : await api("memoria/olvidar_frase", {metodo: "POST", cuerpo: {frase: b.dataset.olvidarFrase}});
+  if (r._estado === 200) { mostrar(r.texto, r.ok, "Memoria"); pintarMemoria(r); }
+});
+
+// ---------- REGISTRO ----------
+async function cargarRegistro() {
+  const r = await api("registro?n=" + $("#reg-n").value, {silencio: true}); if (!r.ok) return;
+  $("#reg-archivo").textContent = r.archivo_registro ? "(" + r.archivo_registro + ")" : "";
+  const pinta = (el, lineas) => { const abajo = el.scrollTop + el.clientHeight >= el.scrollHeight - 8; el.textContent = lineas.join("\n") || "(vacío)"; if (abajo) el.scrollTop = el.scrollHeight; };
+  pinta($("#reg-registro"), r.registro); pinta($("#reg-log"), r.log);
+}
+$("#reg-ahora").onclick = cargarRegistro; $("#reg-n").onchange = cargarRegistro;
+
+// ---------- refresco ----------
+let cargados = {};
+function refrescar(forzar) {
+  cargarEstado();
+  const t = tabActiva;
+  if (t === "automatizaciones") cargarAutomatizaciones();
+  else if (t === "tareas") cargarTareas();
+  else if (t === "registro" && (forzar || $("#reg-auto").checked)) cargarRegistro();
+  else if (t === "notas" && (forzar || !cargados.notas)) { cargarNotas(); cargados.notas = true; }
+  else if (t === "casa" && (forzar || !cargados.casa)) { cargarCasa(); cargados.casa = true; }
+  else if (t === "memoria" && (forzar || !cargados.memoria)) { cargarMemoria(); cargados.memoria = true; }
+}
+setInterval(() => { if (!document.hidden) refrescar(false); }, 5000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refrescar(false); });
+
+// ---------- arranque ----------
+(async function () {
+  pintarRapidos();
+  await cargarAcciones();
+  progTipo(); progCuando();
+  const h = location.hash.replace("#", "");
+  pestana($$("#pestanas button").some((b) => b.dataset.tab === h) ? h : "inicio");
+})();
+</script>
+</body>
+</html>

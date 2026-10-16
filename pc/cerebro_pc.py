@@ -1481,9 +1481,20 @@ def _confirmaciones_telegram(t):
     return None
 
 
+def panel_url():
+    """Dirección del panel web local con su token (pc/panel.py), para abrirlo desde Telegram."""
+    try:
+        return _mod("panel").url_para_telegram()
+    except Exception as e:
+        return "No pude armar la dirección del panel: " + str(e)[:120]
+
+
 def _atajos_telegram(t):
     """Pedidos de la PC que no necesitan IA."""
     t = t.strip(" .!?¿¡")
+    if t in ("panel", "el panel", "abri el panel", "abrir el panel", "abrime el panel", "url del panel",
+             "link del panel", "direccion del panel", "panel web"):
+        return panel_url()
     if t in ("pantalla", "captura", "mandame la pantalla", "mandame una captura", "captura de pantalla",
              "que hay en la pantalla", "sacale foto a la pantalla", "mostrame la pantalla", "que se ve en la pantalla"):
         return accion_captura({})[1]
@@ -1673,14 +1684,38 @@ def _cuando(p):
     return f"{quien} a las {h}:{m:02d}"
 
 
+def _texto_de_accion(accion, datos):
+    """'casa' + {"dispositivo": "luz living", "accion": "prender"} -> 'casa: prender luz living' (para mostrarlo)."""
+    def plano(k, v):
+        if v is True:
+            return k
+        if isinstance(v, list):
+            return ", ".join(str(x) for x in v)
+        return json.dumps(v, ensure_ascii=False) if isinstance(v, dict) else str(v)
+    vacio = (None, "", [], {}, False)
+    primero = ("accion", "orden", "cambio", "modo")
+    partes = [plano(k, datos[k]) for k in primero if datos.get(k) not in vacio]
+    partes += [plano(k, v) for k, v in datos.items() if k not in primero and v not in vacio]
+    return (accion + ": " + " ".join(partes)).strip(": ")[:150]
+
+
 def accion_programar(d):
     """Aviso al celular o rutina que se repite. Datos: texto, tipo (aviso|orden), cada_minutos, cada_horas,
-    hora, dias, desde, hasta, en_minutos, frecuencia."""
+    hora, dias, desde, hasta, en_minutos, frecuencia. Una rutina también puede traer "accion" + "datos" (una
+    acción exacta de ACCIONES, como las programa el panel) en vez de texto libre."""
     texto = str(d.get("texto") or "").strip()
+    accion = str(d.get("accion") or "").strip()
+    datos = d.get("datos") if isinstance(d.get("datos"), dict) else {}
+    if accion and accion not in ACCIONES:
+        return False, f"No conozco la acción {accion}."
+    if accion and not texto:
+        texto = _texto_de_accion(accion, datos)
     if not texto:
         return False, "¿Qué querés que te avise o que haga?"
-    p = {"id": os.urandom(3).hex(), "texto": texto, "tipo": "orden" if d.get("tipo") == "orden" else "aviso",
-         "creado": ahora()}
+    p = {"id": os.urandom(3).hex(), "texto": texto,
+         "tipo": "orden" if (d.get("tipo") == "orden" or accion) else "aviso", "creado": ahora()}
+    if accion:
+        p["accion"], p["datos"] = accion, datos
     for k in ("hora", "desde", "hasta"):
         if d.get(k):
             p[k] = str(d[k])
@@ -1736,34 +1771,55 @@ def accion_borrar_programado(d):
     return True, f"Listo, borré {borrados} aviso{'s' if borrados > 1 else ''}."
 
 
+def ejecutar_programado(p):
+    """Dispara ya un aviso o una rutina (lo usa el programador cuando vence, y el panel con "ejecutar ahora")."""
+    if p.get("accion") in ACCIONES:                    # acción exacta, con sus datos (programada desde el panel)
+        try:
+            r = ACCIONES[p["accion"]](p.get("datos") or {})[1] or "Listo."
+        except Exception as e:
+            log.exception("rutina %s", p["accion"])
+            r = "Falló: " + str(e)[:150]
+    elif p.get("tipo") == "orden":
+        r = _orden_telegram(p["texto"], 1)
+    else:
+        avisar_celular("⏰ " + p["texto"])
+        return "Aviso mandado al celular."
+    registrar("rutina", p["texto"] + " -> " + str(r)[:150])
+    avisar_celular("Rutina: " + p["texto"] + chr(10) + str(r)[:300])
+    return str(r)
+
+
+def revisar_programados(ahora_ts=None):
+    """Una vuelta del programador: lo vencido se dispara y se recalcula su próximo. Devuelve lo disparado."""
+    ahora_ts = ahora_ts or time.time()
+    vencidos = []
+    with PROG_LOCK:
+        lista = _programados()
+        cambio = False
+        for p in list(lista):
+            if p.get("proximo", 0) <= ahora_ts:
+                vencidos.append(dict(p))
+                cambio = True
+                if p.get("una_vez"):
+                    lista.remove(p)
+                else:
+                    p["proximo"] = _proximo(p, ahora_ts)   # si la PC estuvo apagada, no los acumula
+        if cambio:
+            _guardar_programados(lista)
+    disparados = []
+    for p in vencidos:
+        if ahora_ts - p.get("proximo", ahora_ts) > 3600 and not p.get("una_vez"):
+            continue                                          # uno viejo que se perdió: sigue el próximo
+        ejecutar_programado(p)
+        disparados.append(p)
+    return disparados
+
+
 def hilo_programador():
     """Revisa cada 15 segundos si toca algún aviso o rutina."""
     while True:
         try:
-            ahora_ts = time.time()
-            vencidos = []
-            with PROG_LOCK:
-                lista = _programados()
-                cambio = False
-                for p in list(lista):
-                    if p.get("proximo", 0) <= ahora_ts:
-                        vencidos.append(dict(p))
-                        cambio = True
-                        if p.get("una_vez"):
-                            lista.remove(p)
-                        else:
-                            p["proximo"] = _proximo(p, ahora_ts)   # si la PC estuvo apagada, no los acumula
-                if cambio:
-                    _guardar_programados(lista)
-            for p in vencidos:
-                if ahora_ts - p.get("proximo", ahora_ts) > 3600 and not p.get("una_vez"):
-                    continue                                          # uno viejo que se perdió: sigue el próximo
-                if p.get("tipo") == "orden":
-                    r = _orden_telegram(p["texto"], 1)
-                    registrar("rutina", p["texto"] + " -> " + str(r)[:150])
-                    avisar_celular("Rutina: " + p["texto"] + chr(10) + str(r)[:300])
-                else:
-                    avisar_celular("⏰ " + p["texto"])
+            revisar_programados()
         except Exception:
             log.exception("programador")
         time.sleep(15)
@@ -3740,4 +3796,8 @@ if __name__ == "__main__":
     threading.Thread(target=hilo_aparatos, daemon=True).start()
     threading.Thread(target=_aviso_arranque, daemon=True).start()
     threading.Thread(target=hilo_minutero, daemon=True).start()
+    try:                                   # panel web local (pc/panel.py): si falla, el agente sigue igual
+        _mod("panel").iniciar(sys.modules[__name__])
+    except Exception:
+        log.exception("panel")
     escuchar()
