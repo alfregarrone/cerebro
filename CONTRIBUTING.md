@@ -21,8 +21,11 @@ tardó de más.
 
 ## Reglas de la casa
 
-- **Nada de claves en el repo.** `lambda/config.py` y `pc/config.json` están en `.gitignore`;
+- **Nada de claves en el repo.** `lambda/config.py` y `pc/config_pc.json` están en `.gitignore`;
   el CI falla si detecta una clave real.
+- **Todo lo que se arregla lleva una prueba.** La suite de `tests/` corre en Linux sin red, sin AWS y
+  sin Windows: hay un Echo falso para hablarle a la skill entera (`echo.decir("apagá la compu")`) y el
+  agente importado con Telegram y ntfy simulados (`pc`). Mirá `tests/conftest.py`.
 - **Todo lo que se dice se escucha.** Sin markdown, sin listas, sin emojis en las respuestas.
   Números escritos como se pronuncian.
 - **Presupuesto de tiempo.** Cualquier llamada de red nueva entra dentro de `ALEXA_BUDGET`. Si
@@ -32,7 +35,8 @@ tardó de más.
 ## Flujo
 
 1. Rama desde `main`.
-2. `python -m compileall lambda pc` y `ruff check lambda pc` tienen que pasar.
+2. `pip install ruff pytest -r lambda/requirements.txt` una vez; después `ruff check lambda pc pruebas tests`
+   y `python -m pytest` tienen que pasar (es lo mismo que corre el CI).
 3. Probalo en tu propia skill (la consola de Alexa tiene un simulador en la pestaña *Test*).
 4. Commits en formato [Conventional Commits](https://www.conventionalcommits.org/es/).
 5. PR con la plantilla completa y, si es una vía rápida, las frases que probaste.

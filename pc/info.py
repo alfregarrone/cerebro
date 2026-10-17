@@ -136,17 +136,29 @@ def riesgo_pais():
 def inflacion():
     lista = _json("https://api.argentinadatos.com/v1/finanzas/indices/inflacion")
     u, a = lista[-1], lista[-2]
-    v = lambda x: str(x).replace(".", ",")
+
+    def v(x):
+        return str(x).replace(".", ",")
+
     return (f"La inflación de {MESES[int(u['fecha'][5:7]) - 1]} fue de {v(u['valor'])} %. "
             f"En {MESES[int(a['fecha'][5:7]) - 1]} había sido {v(a['valor'])} %.")
 
 
+def _plano(texto):
+    """Minúsculas y sin tildes: 'Dólar' -> 'dolar'."""
+    import unicodedata
+    t = unicodedata.normalize("NFKD", str(texto or "").lower())
+    return "".join(c for c in t if not unicodedata.combining(c))
+
+
 def cotizacion(moneda=""):
-    m = str(moneda or "").lower()
+    m = _plano(moneda)
     if any(x in m for x in ("bitcoin", "btc", "ethereum", "ether", "cripto")):
         cual = "ethereum" if "ether" in m else "bitcoin"
         d = _json("https://api.coingecko.com/api/v3/simple/price?ids=" + cual + "&vs_currencies=usd")
         return f"El {cual} está a {round(d[cual]['usd'])} dólares."
+    if "dolar" in m or "usd" in m:
+        return dolar()
     codigos = (("euro", "EUR", "El euro"), ("real", "BRL", "El real"), ("chileno", "CLP", "El peso chileno"),
                ("uruguayo", "UYU", "El peso uruguayo"))
     cod, dicho = next(((c, d) for k, c, d in codigos if k in m), ("EUR", "El euro"))
@@ -159,14 +171,22 @@ def cotizacion(moneda=""):
 
 def convertir(monto, de="dolar", a="peso"):
     """Convierte entre pesos, dólares (blue y oficial), euros y reales."""
-    monto = float(monto)
-    de, a = str(de).lower(), str(a).lower()
+    monto = float(str(monto).replace(",", "."))
+    de, a = _plano(de), _plano(a)
     dol = {x.get("casa"): float(x["venta"]) for x in _json("https://dolarapi.com/v1/dolares") if x.get("venta")}
     otras = {x.get("moneda"): float(x["venta"]) for x in _json("https://dolarapi.com/v1/cotizaciones") if x.get("venta")}
     tasas = {"dolar": dol["oficial"], "euro": otras.get("EUR"), "real": otras.get("BRL"), "peso": 1.0}
-    clave = lambda s: next((k for k in tasas if k in s), "peso")
+    alias = {"usd": "dolar", "eur": "euro", "brl": "real", "ars": "peso"}
+
+    def clave(s):
+        s = alias.get(s.strip(), s)
+        return next((k for k in tasas if k in s), "peso")
+
     de, a = clave(de), clave(a)
-    fmt = lambda x: str(round(x)) if x >= 100 or float(x).is_integer() else f"{x:.2f}".replace(".", ",")
+
+    def fmt(x):
+        return str(round(x)) if x >= 100 or float(x).is_integer() else f"{x:.2f}".replace(".", ",")
+
     plural = {"dolar": "dólares", "euro": "euros", "real": "reales", "peso": "pesos"}
     texto = f"{fmt(monto)} {plural[de]} son {fmt(monto * tasas[de] / tasas[a])} {plural[a]} al oficial"
     if {de, a} == {"dolar", "peso"}:              # con el dólar, también al blue

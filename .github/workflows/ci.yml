@@ -14,21 +14,38 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Instalar herramientas y el SDK de Alexa
+        run: pip install -q ruff pytest -r lambda/requirements.txt
+
       - name: Compilar
-        run: python -m compileall -q lambda pc pruebas
+        run: python -m compileall -q lambda pc pruebas tests
 
       - name: Lint
-        run: |
-          pip install -q ruff
-          ruff check --select E9,F63,F7,F82 lambda pc pruebas
+        run: ruff check lambda pc pruebas tests
 
-      - name: Validar el modelo de interacción
-        run: python -c "import json,sys; m=json.load(open('skill-package/interactionModels/custom/es-US.json'))['interactionModel']['languageModel']; print('invocación:', m['invocationName'], '| intents:', len(m['intents']))"
+      - name: Pruebas (sin red, sin AWS, sin Windows)
+        run: python -m pytest -q
+
+      - name: Validar el modelo de interacción y el manifiesto
+        run: |
+          python - <<'EOF'
+          import json
+          m = json.load(open('skill-package/interactionModels/custom/es-US.json'))['interactionModel']['languageModel']
+          nombres = {i['name'] for i in m['intents']}
+          for req in ('ChatIntent', 'BriefingIntent', 'AMAZON.StopIntent', 'AMAZON.CancelIntent', 'AMAZON.HelpIntent',
+                      'AMAZON.FallbackIntent', 'AMAZON.YesIntent', 'AMAZON.NoIntent', 'AMAZON.PauseIntent',
+                      'AMAZON.ResumeIntent', 'AMAZON.NextIntent', 'AMAZON.PreviousIntent'):
+              assert req in nombres, 'falta el intent ' + req
+          muestras = [v['name']['value'] for t in m['types'] for v in t['values']]
+          assert len(muestras) == len(set(muestras)), 'hay muestras repetidas en CatchAll'
+          json.load(open('skill-package/skill.json'))
+          print('invocación:', m['invocationName'], '| intents:', len(m['intents']), '| muestras:', len(muestras))
+          EOF
 
       - name: Verificar que no haya secretos
         run: |
-          ! grep -rEn "AIza[0-9A-Za-z_-]{20,}|AQ\.[0-9A-Za-z_-]{30,}|cerebro-[0-9a-f]{20}:[0-9a-f]{48}|[0-9]{8,10}:AA[0-9A-Za-z_-]{33}" --include=*.py --include=*.json --include=*.md --include=*.bat --include=*.ps1 --include=*.txt . \
+          ! grep -rEn "AIza[0-9A-Za-z_-]{20,}|AQ\.[0-9A-Za-z_-]{30,}|cerebro-[0-9a-f]{20}:[0-9a-f]{48}|[0-9]{8,10}:AA[0-9A-Za-z_-]{33}|calendar\.google\.com/calendar/ical/[^\"' ]+/private-[0-9a-f]{16,}|sk-ant-[0-9A-Za-z_-]{20,}" --include=*.py --include=*.json --include=*.md --include=*.bat --include=*.ps1 --include=*.txt --include=*.html . \
             || { echo "Hay una clave real en el repo"; exit 1; }
 
       - name: Verificar la plantilla de configuración del agente
-        run: python -c "import json; c=json.load(open('pc/config.example.json')); assert c['cerebro_link']=='' and c['gemini_api_key']=='' and c['telegram_token']==''; print('plantilla OK:', len(c), 'claves')"
+        run: python -c "import json; c=json.load(open('pc/config.example.json')); assert c['cerebro_link']=='' and c['gemini_api_key']=='' and c['telegram_token']=='' and c['panel_token']=='' and c['gmail_clave_app']=='' and c['tplink_clave']==''; print('plantilla OK:', len(c), 'claves')"

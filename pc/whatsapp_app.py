@@ -168,12 +168,17 @@ def _elegir(contacto, resultados):
     if len(exactos) == 1:
         return exactos[0], None
     palabras = objetivo.split()
-    parecidos = [r for r, n in nombres if all(p in n.split() or p in n for p in palabras)]
+    # Palabras enteras: "juan" es Juan Pérez, no Juana López. Lo parecido solo por prefijo se pregunta, no se manda.
+    parecidos = [r for r, n in nombres if all(p in n.split() for p in palabras)]
     if len(parecidos) == 1:
         return parecidos[0], None
     if len(parecidos) > 1 or len(exactos) > 1:
         opciones = ", ".join(str(r.get("nombre")) for r in (exactos or parecidos)[:5])
         return None, f"Hay varios contactos parecidos a {contacto}: {opciones}. Decime cuál, con el nombre completo."
+    por_prefijo = [r for r, n in nombres if all(any(w.startswith(p) for w in n.split()) for p in palabras)]
+    if por_prefijo:
+        opciones = ", ".join(str(r.get("nombre")) for r in por_prefijo[:4])
+        return None, f"No encontré a {contacto} exacto. ¿Te referís a {opciones}? Decime el nombre completo."
     return None, f"No encontré a {contacto} en WhatsApp (aparecen: " + \
         ", ".join(str(r.get("nombre")) for r in resultados[:4]) + ")."
 

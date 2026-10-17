@@ -117,8 +117,9 @@ pc/                     agente que corre en tu computadora (Windows)
   agenda.py · correo.py · casa.py · medios.py · whatsapp_app.py · escritorio.py · info.py
   instalar.bat · instalar-extras.bat · configurar.bat · abrir-panel.bat · ACTUALIZAR.bat · desinstalar.bat
   config.example.json   plantilla (enlace, Telegram, Gemini, calendario, Gmail, luces)
-pruebas/                baterías de prueba: skill entera con un Echo falso, bot de Telegram, agenda, mails, música
-docs/                   instalación y uso
+tests/                  suite automática (pytest): corre en CI sin red, sin AWS ni Windows; Echo falso y agente simulado
+pruebas/                baterías manuales con la IA real y Windows: skill entera, bot de Telegram, agenda, mails, música
+docs/                   instalación, uso y panel
 ```
 
 ## Decisiones y limitaciones

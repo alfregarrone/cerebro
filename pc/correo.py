@@ -33,11 +33,11 @@ def _conectar(config):
     try:
         m = imaplib.IMAP4_SSL(SERVIDOR, 993, timeout=15)
     except Exception as e:
-        raise CorreoError("No pude conectarme a Gmail: " + str(e)[:100])
+        raise CorreoError("No pude conectarme a Gmail: " + str(e)[:100]) from e
     try:
         m.login(str(config["gmail_usuario"]).strip(), str(config["gmail_clave_app"]).replace(" ", "").strip())
-    except imaplib.IMAP4.error:
-        raise CorreoError("Gmail no aceptó la contraseña de aplicación. Creá una nueva y cargala con configurar.bat.")
+    except imaplib.IMAP4.error as e:
+        raise CorreoError("Gmail no aceptó la contraseña de aplicación. Creá una nueva y cargala con configurar.bat.") from e
     m.select("INBOX", readonly=True)          # solo lectura: no marca nada como leído
     return m
 

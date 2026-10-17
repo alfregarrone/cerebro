@@ -36,7 +36,7 @@ def _descargar(url, forzar=False):
     except Exception as e:
         if guardado:                      # sin internet: uso lo último que bajé
             return guardado[1]
-        raise AgendaError("No pude bajar tu calendario: " + str(e)[:120])
+        raise AgendaError("No pude bajar tu calendario: " + str(e)[:120]) from e
     if b"BEGIN:VCALENDAR" not in datos[:2000]:
         raise AgendaError("El link del calendario no devuelve un calendario. Revisá que sea la "
                           "'Dirección secreta en formato iCal'.")
@@ -56,8 +56,8 @@ def eventos(config, desde, hasta):
     try:
         import icalendar
         import recurring_ical_events
-    except ImportError:
-        raise AgendaError("Falta instalar el lector de calendarios: ejecutá instalar-extras.bat en la PC.")
+    except ImportError as e:
+        raise AgendaError("Falta instalar el lector de calendarios: ejecutá instalar-extras.bat en la PC.") from e
     urls = links(config)
     if not urls:
         raise AgendaError("Todavía no conectaste tu calendario. En la PC, ejecutá configurar.bat y pegá el link "
@@ -69,7 +69,7 @@ def eventos(config, desde, hasta):
         except AgendaError:
             raise
         except Exception as e:
-            raise AgendaError("No pude leer tu calendario: " + str(e)[:120])
+            raise AgendaError("No pude leer tu calendario: " + str(e)[:120]) from e
         # margen de un día para no perder eventos por la zona horaria; después se filtra exacto
         for ev in recurring_ical_events.of(cal).between(desde - timedelta(days=1), hasta + timedelta(days=1)):
             if str(ev.get("STATUS") or "").upper() == "CANCELLED":

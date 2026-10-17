@@ -4,6 +4,22 @@
       "invocationName": "cerebro",
       "intents": [
         {
+          "name": "AMAZON.PreviousIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NextIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NoIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.YesIntent",
+          "samples": []
+        },
+        {
           "name": "AMAZON.CancelIntent",
           "samples": []
         },
@@ -713,6 +729,251 @@
             {
               "name": {
                 "value": "poneme algo de los redondos"
+              }
+            },
+            {
+              "name": {
+                "value": "qué tengo hoy"
+              }
+            },
+            {
+              "name": {
+                "value": "qué tengo mañana en la agenda"
+              }
+            },
+            {
+              "name": {
+                "value": "tengo alguna reunión esta semana"
+              }
+            },
+            {
+              "name": {
+                "value": "tengo mails"
+              }
+            },
+            {
+              "name": {
+                "value": "resumime los mails"
+              }
+            },
+            {
+              "name": {
+                "value": "mandame la pantalla"
+              }
+            },
+            {
+              "name": {
+                "value": "sacá una captura"
+              }
+            },
+            {
+              "name": {
+                "value": "cómo está la compu"
+              }
+            },
+            {
+              "name": {
+                "value": "cuánto espacio le queda al disco"
+              }
+            },
+            {
+              "name": {
+                "value": "prendé la luz del living"
+              }
+            },
+            {
+              "name": {
+                "value": "poné la luz en azul"
+              }
+            },
+            {
+              "name": {
+                "value": "poné la luz al treinta"
+              }
+            },
+            {
+              "name": {
+                "value": "poné música de soda stereo"
+              }
+            },
+            {
+              "name": {
+                "value": "pausá la música"
+              }
+            },
+            {
+              "name": {
+                "value": "qué está sonando"
+              }
+            },
+            {
+              "name": {
+                "value": "silenciá la compu"
+              }
+            },
+            {
+              "name": {
+                "value": "cerrá chrome"
+              }
+            },
+            {
+              "name": {
+                "value": "apagá la compu"
+              }
+            },
+            {
+              "name": {
+                "value": "mandale un whatsapp a juan que llego tarde"
+              }
+            },
+            {
+              "name": {
+                "value": "qué mensajes tengo"
+              }
+            },
+            {
+              "name": {
+                "value": "anotá que tengo que llamar a marta"
+              }
+            },
+            {
+              "name": {
+                "value": "listo lo de las pilas"
+              }
+            },
+            {
+              "name": {
+                "value": "buscá en mis notas lo del presupuesto"
+              }
+            },
+            {
+              "name": {
+                "value": "recordame mañana a las diez llamar al dentista"
+              }
+            },
+            {
+              "name": {
+                "value": "poné un temporizador de diez minutos para el horno"
+              }
+            },
+            {
+              "name": {
+                "value": "cuánto falta"
+              }
+            },
+            {
+              "name": {
+                "value": "borrá el recordatorio de la pizza"
+              }
+            },
+            {
+              "name": {
+                "value": "cómo va el riesgo país"
+              }
+            },
+            {
+              "name": {
+                "value": "partidos de la fecha"
+              }
+            },
+            {
+              "name": {
+                "value": "va a llover el finde"
+              }
+            },
+            {
+              "name": {
+                "value": "qué tiempo hace en córdoba"
+              }
+            },
+            {
+              "name": {
+                "value": "noticias de economía"
+              }
+            },
+            {
+              "name": {
+                "value": "pasame la receta al celular"
+              }
+            },
+            {
+              "name": {
+                "value": "qué tengo programado"
+              }
+            },
+            {
+              "name": {
+                "value": "desactivá las alertas del dólar"
+              }
+            },
+            {
+              "name": {
+                "value": "activá todas las alertas"
+              }
+            },
+            {
+              "name": {
+                "value": "mandame el resumen a las siete y media"
+              }
+            },
+            {
+              "name": {
+                "value": "pedile a claude que ordene mi carpeta de descargas"
+              }
+            },
+            {
+              "name": {
+                "value": "fijate en instagram si tengo mensajes"
+              }
+            },
+            {
+              "name": {
+                "value": "cómo va la tarea"
+              }
+            },
+            {
+              "name": {
+                "value": "cancelá la tarea"
+              }
+            },
+            {
+              "name": {
+                "value": "buscá aparatos nuevos"
+              }
+            },
+            {
+              "name": {
+                "value": "a la luz nueva llamala luz del living"
+              }
+            },
+            {
+              "name": {
+                "value": "olvidate de lo del cilantro"
+              }
+            },
+            {
+              "name": {
+                "value": "no eso no quería la luz cálida"
+              }
+            },
+            {
+              "name": {
+                "value": "sí dale"
+              }
+            },
+            {
+              "name": {
+                "value": "no mejor no"
+              }
+            },
+            {
+              "name": {
+                "value": "abrí el panel"
+              }
+            },
+            {
+              "name": {
+                "value": "qué hora es en madrid"
               }
             }
           ]

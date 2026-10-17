@@ -304,7 +304,6 @@ ok, r = c.accion_musica({"busqueda": "soda stereo", "servicio": "spotify"})
 chequear("sin spotify: YouTube y dice por qué", "YouTube" in r and "no apareció la ventana de Spotify" in r and ABIERTO, r)
 
 # Spotify de verdad, simulando pantalla, mouse y la IA que mira: fila de canción con doble clic
-import ctypes  # noqa: E402
 m2 = c._medios()
 estado_spotify = {"v": ("Tema viejo", "Otro", "Paused")}
 CLICS = []

@@ -8,11 +8,12 @@
 
 ## Cómo lo probaste
 
-<!-- Tests agregados, pasos manuales, o ambos. -->
+<!-- Tests agregados en tests/, frases que probaste en el simulador de Alexa o en el Echo, o ambos. -->
 
 ## Checklist
 
-- [ ] `npm test` pasa
-- [ ] `npm run typecheck` pasa
-- [ ] Agregué o actualicé tests
-- [ ] Actualicé el README / CHANGELOG si hacía falta
+- [ ] `ruff check lambda pc pruebas tests` pasa
+- [ ] `python -m pytest` pasa
+- [ ] Agregué o actualicé tests en `tests/`
+- [ ] Si agregué una acción de PC, está en `PC_ACTIONS` (skill), en `ACCIONES` (agente) y en el `CATALOGO` del panel
+- [ ] Actualicé README / docs si hacía falta

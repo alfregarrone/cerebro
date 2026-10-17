@@ -30,7 +30,7 @@ Lo que le contás sobre vos se guarda entre conversaciones, sin que se lo pidas.
 
 Para manejarla:
 
-- *"¿qué sabés de mí?"* — te lee lo que tiene guardado.
+- *"¿qué sabés de mí?"* — te lee lo que tiene guardado (con o sin el agente de PC).
 - *"olvidate de lo del cilantro"* — borra lo que contenga ese texto.
 - Si se equivoca y lo corregís (*"no, eso no, lo que quería era…"*), lo guarda como aprendizaje
   para no repetirlo.
@@ -56,8 +56,8 @@ La primera vez, Alexa te pide permiso desde la app. Es una sola vez.
 
 ## Temporizadores
 
-> *"poné diez minutos"*, *"poné un temporizador de una hora y media para el horno"*
-> *"¿cuánto falta?"*, *"cancelá el temporizador"*
+> *"poné diez minutos"*, *"poné un temporizador de una hora y media para el horno"*, *"para la pasta, treinta y cinco minutos"*
+> *"¿cuánto le falta al temporizador?"*, *"cancelá el temporizador"*, *"avisame en diez minutos"*
 
 Los temporizadores y las alarmas van por la **vía rápida**: no pasan por la IA y responden en un
 segundo.
@@ -79,10 +79,12 @@ Todo gratis y sin claves, de APIs públicas.
 
 ## Radio
 
-> *"poné Mitre"*, *"poné La 100"*, *"poné Rock and Pop"*, *"poné una radio de jazz"*
-> *"pausá"*, *"seguí"*, *"siguiente"*
+> *"poné la radio Mitre"*, *"poné la radio La 100"*, *"poné Rock and Pop"*, *"poné una radio de jazz"*
+> *"pausá"*, *"seguí"*
 
-Suena en el Echo como cualquier radio de Alexa. Busca en el directorio público Radio Browser.
+Suena en el Echo como cualquier radio de Alexa. Busca en el directorio público Radio Browser, dentro del
+tiempo que da Alexa (si no encuentra una emisora segura en ese tiempo, te lo dice en vez de cortarse).
+*"Siguiente"* y *"anterior"* pasan de tema en la música de la PC, no en la radio.
 
 ## Resumen del día
 
@@ -98,7 +100,7 @@ vez de leerla entera:
 
 > *"pasame eso al celular"*, *"mandame la receta"*
 
-Llega por Telegram si configuraste el agente de PC; si no, por notificación de ntfy.
+Llega por Telegram a través del agente de PC. Sin el agente no hay a dónde mandarlo, y Cerebro te lo dice.
 
 ---
 
@@ -124,7 +126,9 @@ Quedan en archivos Markdown en `C:\Users\<vos>\Cerebro`, así que los podés abr
 > *"poné Ciro en Spotify"*, *"pausá"*, *"seguí"*, *"siguiente"*, *"¿qué está sonando?"*
 > *"subí el volumen"*, *"poné el volumen al treinta"*, *"silenciá la compu"*
 > *"sacá una captura"*, *"¿cómo está la compu?"* — disco, memoria, procesador, internet, hace cuánto está prendida
-> *"bloqueá la pc"*, *"suspendé"*, *"apagá la compu"*, *"reiniciá"* — **piden confirmación**: "¿Seguro?" → *"sí"*
+> *"bloqueá la pc"*, *"suspendé la compu"*, *"apagá la compu"*, *"reiniciá la pc"* — apagar, reiniciar y
+> suspender **piden confirmación**: "¿Confirmás?" → *"sí"*, *"dale"*, *"apagala"*; o *"no"* para cancelar.
+> Mandar un WhatsApp también pide el "sí", y un *"no"* descarta el mensaje en la PC.
 
 ### WhatsApp
 

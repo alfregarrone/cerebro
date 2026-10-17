@@ -24,7 +24,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent
-VERSION = "2026-09-29c"      # se ve en "estado": asi se sabe si la actualizacion quedo instalada
+VERSION = "2026-10-17"       # se ve en "estado": asi se sabe si la actualizacion quedo instalada
 CONFIG = json.loads((BASE / "config_pc.json").read_text(encoding="utf-8"))
 TOPIC, SECRET = CONFIG["cerebro_link"].split(":", 1)
 VAULT = Path(CONFIG.get("carpeta_notas") or (Path.home() / "Cerebro"))
@@ -43,8 +43,10 @@ def _buscar_claude():
 
 STATE_FILE = BASE / "estado.json"
 
-logging.basicConfig(filename=BASE / "cerebro_pc.log", level=logging.INFO, encoding="utf-8",
-                    format="%(asctime)s %(levelname)s %(message)s")
+from logging.handlers import RotatingFileHandler  # noqa: E402
+
+_LOG_HANDLER = RotatingFileHandler(BASE / "cerebro_pc.log", maxBytes=2 * 1024 * 1024, backupCount=3, encoding="utf-8")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s", handlers=[_LOG_HANDLER])
 log = logging.getLogger("cerebro")
 
 MAX_AGE_LIVE = 120                         # órdenes en vivo más viejas se ignoran (la PC estaba apagada)
@@ -69,16 +71,24 @@ def ahora():
     return datetime.now().strftime("%Y-%m-%d %H:%M")
 
 
+def _escribir_json(path, objeto):
+    """Escritura atómica: primero a un archivo temporal y después se reemplaza. Un corte de luz no deja un JSON a medias."""
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(objeto, ensure_ascii=False, indent=2), encoding="utf-8")
+    os.replace(tmp, path)
+
+
 def cargar_estado():
-    try:
-        return json.loads(STATE_FILE.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return {}
+    with _state_lock:
+        try:
+            return json.loads(STATE_FILE.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return {}
 
 
 def guardar_estado(estado):
     with _state_lock:
-        STATE_FILE.write_text(json.dumps(estado, ensure_ascii=False, indent=2), encoding="utf-8")
+        _escribir_json(STATE_FILE, estado)
 
 
 def estado_cambiar(fn):
@@ -140,8 +150,10 @@ def _telegram_chat_id():
     try:
         datos = _telegram("getUpdates", {"limit": 20})
         for u in reversed((datos or {}).get("result", []) or []):
-            chat = ((u.get("message") or u.get("channel_post") or {}).get("chat") or {})
-            if chat.get("id"):
+            mensaje = u.get("message") or u.get("channel_post") or {}
+            chat = mensaje.get("chat") or {}
+            # Solo un "/start" ata el bot a un chat: cualquier otro mensaje de un desconocido no sirve para eso.
+            if chat.get("id") and str(mensaje.get("text") or "").strip().lower().startswith("/start"):
                 estado = cargar_estado()
                 estado["telegram_chat_id"] = chat["id"]
                 guardar_estado(estado)
@@ -358,13 +370,15 @@ def limpiar_para_voz(linea):
 MEMORIA = None
 MAX_DATOS = 200
 MAX_HISTORIAL = 40
+_MEM_LOCK = threading.RLock()       # Telegram, ntfy y los hilos de avisos escriben la memoria a la vez
 
 
 def _memoria():
-    try:
-        datos = json.loads((BASE / "memoria.json").read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        datos = {}
+    with _MEM_LOCK:
+        try:
+            datos = json.loads((BASE / "memoria.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            datos = {}
     datos.setdefault("datos", [])
     datos.setdefault("historial", [])
     return datos
@@ -373,35 +387,39 @@ def _memoria():
 def _guardar_memoria(m):
     m["datos"] = m["datos"][-MAX_DATOS:]
     m["historial"] = m["historial"][-MAX_HISTORIAL:]
-    (BASE / "memoria.json").write_text(json.dumps(m, indent=2, ensure_ascii=False), encoding="utf-8")
+    with _MEM_LOCK:
+        _escribir_json(BASE / "memoria.json", m)
 
 
 def recordar_dato(texto):
     texto = str(texto or "").strip()
     if not texto:
         return False
-    m = _memoria()
-    if texto not in m["datos"]:
-        m["datos"].append(texto)
-        _guardar_memoria(m)
-        registrar("memoria", "recordar: " + texto[:150])
+    with _MEM_LOCK:
+        m = _memoria()
+        if texto not in m["datos"]:
+            m["datos"].append(texto)
+            _guardar_memoria(m)
+            registrar("memoria", "recordar: " + texto[:150])
     return True
 
 
 def olvidar_dato(texto):
     objetivo = norm(texto)
-    m = _memoria()
-    antes = len(m["datos"])
-    m["datos"] = [d for d in m["datos"] if objetivo not in norm(d)]
-    _guardar_memoria(m)
+    with _MEM_LOCK:
+        m = _memoria()
+        antes = len(m["datos"])
+        m["datos"] = [d for d in m["datos"] if objetivo not in norm(d)]
+        _guardar_memoria(m)
     registrar("memoria", "olvidar: " + str(texto)[:100])
     return antes - len(m["datos"])
 
 
 def anotar_charla(rol, texto):
-    m = _memoria()
-    m["historial"].append({"rol": rol, "texto": str(texto)[:800], "cuando": ahora()})
-    _guardar_memoria(m)
+    with _MEM_LOCK:
+        m = _memoria()
+        m["historial"].append({"rol": rol, "texto": str(texto)[:800], "cuando": ahora()})
+        _guardar_memoria(m)
 
 
 def contexto_memoria(con_historial=True):
@@ -971,6 +989,12 @@ def accion_whatsapp_confirmar(d):
     return True, "Corrigiendo." if pend.get("tipo") == "editar" else "Enviando."
 
 
+def accion_whatsapp_cancelar(d):
+    """El usuario dijo "no" (o cambió de tema) al "¿lo envío?": el mensaje preparado se descarta."""
+    habia = estado_cambiar(lambda e: e.pop("whatsapp_pendiente", None))
+    return True, "Descarté el mensaje." if habia else "No había ningún mensaje esperando."
+
+
 def accion_whatsapp_leer(d):
     """Abre el chat y te manda por Telegram lo que dice (la IA lo lee de la pantalla)."""
     contacto = str(d.get("contacto") or "").strip()
@@ -1455,29 +1479,49 @@ SI_TELEGRAM = ("si", "dale", "ok", "confirmo", "hacelo", "si, hacelo", "si hacel
 NO_TELEGRAM = ("no", "cancela", "cancelalo", "dejalo", "no, dejalo", "mejor no", "descartalo")
 
 
+VENCIMIENTOS = {"sistema_pendiente": 300, "whatsapp_pendiente": 600, "plan_pendiente": PLAN_TTL}
+
+
+def _pendientes_vigentes(estado):
+    """Lo que está esperando un 'sí', del más reciente al más viejo. Lo vencido se borra del estado."""
+    vigentes = []
+    for clave, ttl in VENCIMIENTOS.items():
+        p = estado.get(clave)
+        if not p:
+            continue
+        if time.time() - float(p.get("ts", 0)) > ttl:
+            estado.pop(clave, None)
+            continue
+        vigentes.append((float(p.get("ts", 0)), clave, p))
+    vigentes.sort(reverse=True)
+    return vigentes
+
+
 def _confirmaciones_telegram(t):
-    """'sí' / 'no' para lo que quedó esperando: apagar la PC, un plan de tarea o un WhatsApp."""
+    """'sí' / 'no' para lo que quedó esperando: apagar la PC, un plan de tarea o un WhatsApp.
+
+    Si hay más de una cosa esperando, el 'sí' va para la última pregunta que se hizo (la más reciente).
+    """
     t = t.strip(" .!")
     estado = cargar_estado()
-    sistema = estado.get("sistema_pendiente")
-    plan = estado.get("plan_pendiente")
-    wa = estado.get("whatsapp_pendiente")
-    if sistema and time.time() - sistema.get("ts", 0) > 300:
-        sistema = None
-    if t in NO_TELEGRAM and (sistema or plan or wa):
-        for clave in ("sistema_pendiente", "plan_pendiente", "whatsapp_pendiente"):
+    vigentes = _pendientes_vigentes(estado)
+    if not vigentes:
+        guardar_estado(estado)                         # lo vencido ya no molesta
+        return None
+    if t in NO_TELEGRAM:
+        for _, clave, _p in vigentes:
             estado.pop(clave, None)
         guardar_estado(estado)
         return "Listo, lo descarté."
     if t in SI_TELEGRAM or t in ("mandalo", "envialo", "enviar", "si, mandalo", "si mandalo", "corregilo"):
-        if sistema:
+        _, clave, p = vigentes[0]
+        if clave == "sistema_pendiente":
             estado.pop("sistema_pendiente", None)
             guardar_estado(estado)
-            return accion_sistema({"orden": sistema["orden"]})[1] or "Hecho."
-        if wa:
+            return accion_sistema({"orden": p["orden"]})[1] or "Hecho."
+        if clave == "whatsapp_pendiente":
             return accion_whatsapp_confirmar({})[1]
-        if plan:
-            return accion_confirmar_tarea({})[1]
+        return accion_confirmar_tarea({})[1]
     return None
 
 
@@ -1623,7 +1667,7 @@ def _programados():
 
 
 def _guardar_programados(lista):
-    (BASE / "programados.json").write_text(json.dumps(lista, indent=2, ensure_ascii=False), encoding="utf-8")
+    _escribir_json(BASE / "programados.json", lista)
 
 
 def _hm(valor, defecto):
@@ -1638,7 +1682,9 @@ def _dias(valor):
         valor = re.split(r"[,\s]+", valor)
     salida = []
     for d in valor or []:
-        n = DIAS_SEMANA.get(str(d).strip()) if str(d).strip() in DIAS_SEMANA else DIAS_SEMANA.get(norm(d))
+        crudo = str(d).strip()
+        plano = re.sub(r"^(los|el)\s+", "", norm(crudo))
+        n = DIAS_SEMANA.get(crudo) if crudo in DIAS_SEMANA else DIAS_SEMANA.get(plano, DIAS_SEMANA.get(plano.rstrip("s")))
         if n is not None and n not in salida:
             salida.append(n)
     return sorted(salida)
@@ -1808,8 +1854,14 @@ def revisar_programados(ahora_ts=None):
             _guardar_programados(lista)
     disparados = []
     for p in vencidos:
-        if ahora_ts - p.get("proximo", ahora_ts) > 3600 and not p.get("una_vez"):
+        atraso = ahora_ts - p.get("proximo", ahora_ts)
+        if atraso > 3600 and not p.get("una_vez"):
             continue                                          # uno viejo que se perdió: sigue el próximo
+        if p.get("una_vez") and (p.get("tipo") == "orden" or p.get("accion")) and atraso > 900:
+            # "apagá la PC a las 23" no se ejecuta a las 9 de la mañana porque la PC estaba apagada a las 23
+            avisar_celular("No hice esto porque la PC estaba apagada a esa hora: " + p["texto"])
+            registrar("rutina", "omitida por atraso (" + str(int(atraso // 60)) + " min): " + p["texto"])
+            continue
         ejecutar_programado(p)
         disparados.append(p)
     return disparados
@@ -1859,12 +1911,14 @@ def _programa_desde_texto(texto):
         n = valor(norm(m.group(1)))
         datos["en_minutos"] = n * 60 if norm(m.group(2)).startswith("h") else n
         resto = resto[:m.start()] + resto[m.end():]
-    m = re.search(_patron(r"\ba\s+las?\s+(\d{1,2})(?:[:.](\d{2}))?\s*(hs|horas)?(\s+de\s+la\s+(tarde|noche|manana))?"),
-                  resto, re.I)
+    m = re.search(_patron(r"\ba\s+las?\s+(\d{1,2})(?:[:.](\d{2}))?(\s*(?:hs|horas))?"
+                          r"(\s+de\s+la\s+(tarde|noche|manana|madrugada))?"), resto, re.I)
     if m:
         h = int(m.group(1))
         if m.group(5) and norm(m.group(5)) in ("tarde", "noche") and h < 12:
             h += 12
+        if m.group(5) and norm(m.group(5)) in ("noche", "madrugada") and h == 12:
+            h = 0
         datos["hora"] = f"{h}:{m.group(2) or '00'}"
         resto = resto[:m.start()] + resto[m.end():]
     tn = norm(resto)
@@ -2560,8 +2614,10 @@ def _mandar_resumen_si_toca(ahora_dt=None):
     ahora_dt = ahora_dt or datetime.now()
     if not _toca_resumen(ahora_dt, _config_resumen()):
         return False
+    # Se marca como mandado recién cuando salió: si al arrancar todavía no hay internet, se reintenta después.
+    if not avisar_celular(armar_resumen(ahora_dt), "Cerebro: resumen del día"):
+        return False
     estado_cambiar(lambda e: e.setdefault("resumen", {}).__setitem__("ultimo", ahora_dt.strftime("%Y-%m-%d")))
-    avisar_celular(armar_resumen(ahora_dt), "Cerebro: resumen del día")
     return True
 
 
@@ -2619,7 +2675,8 @@ ACCIONES = {
     "whatsapp": accion_whatsapp, "whatsapp_confirmar": accion_whatsapp_confirmar,
     "whatsapp_editar": accion_whatsapp_editar,
     "whatsapp_archivo": accion_whatsapp_archivo, "whatsapp_resumen": accion_whatsapp_resumen,
-    "whatsapp_leer": accion_whatsapp_leer, "pantalla_confirmar": accion_pantalla_confirmar,
+    "whatsapp_leer": accion_whatsapp_leer, "whatsapp_cancelar": accion_whatsapp_cancelar,
+    "pantalla_confirmar": accion_pantalla_confirmar,
     "casa": accion_casa, "casa_descubrir": accion_casa_descubrir,
     "diagnostico": accion_diagnostico, "frase": accion_frase, "aprender": lambda d: accion_aprender(d),   # definida más abajo
     "recordar": accion_recordar, "olvidar": accion_olvidar, "que_sabes": accion_que_sabes,
@@ -2764,7 +2821,7 @@ def _guardar_aprendido(frase, comandos):
     """comandos: lista de textos ("poné la luz al 10") o de acciones ({"accion": ..., "datos": ...})."""
     datos = _aprendidos()
     datos[norm(frase)] = comandos
-    (BASE / "aprendido.json").write_text(json.dumps(datos, indent=2, ensure_ascii=False), encoding="utf-8")
+    _escribir_json(BASE / "aprendido.json", datos)
     registrar("aprendizaje", frase + " = " + " ; ".join(_describir(c) for c in comandos))
 
 
@@ -3166,8 +3223,8 @@ def _orden_telegram(texto, profundidad=0):
     # alertas y aparatos (frases claras)
     if t.strip(" ?.") in ("que alertas tengo", "alertas", "mis alertas", "como estan las alertas"):
         return accion_alertas({})[1]
-    m = re.match(r"(activa|desactiva|prende|apaga|saca|pone)r?\s+(las\s+|la\s+)?(alertas?|avisos?)\s*(del?\s+|de\s+la\s+)?"
-                 r"(dolar|lluvia|todas|todos)?", t)
+    m = re.match(r"(activa|desactiva|prende|apaga|saca|pone)r?\s+(las\s+|la\s+)?(alertas?|avisos?)\s*(de\s+la\s+|del\s+|de\s+)?"
+                 r"([a-z]+)?", t)
     if m and "alerta" in t:
         return accion_alertas({"tipo": m.group(5) or "todas",
                                "activar": m.group(1) in ("activa", "prende", "pone")})[1]
@@ -3630,7 +3687,12 @@ def interpretar_con_ia(texto, anidado=False):
     plan = _json_de(crudo)
     partes = [str(plan.get("respuesta") or "").strip()]
     aprendido = recordado = False
-    for a in (plan.get("acciones") or [])[:6]:
+    acciones = plan.get("acciones") or []
+    if isinstance(acciones, dict):                   # a veces manda una sola acción como objeto
+        acciones = [acciones]
+    if not isinstance(acciones, list):
+        acciones = []
+    for a in acciones[:6]:
         if not isinstance(a, dict):
             continue
         nombre = str(a.get("accion") or "")
@@ -3725,7 +3787,18 @@ def escuchar_telegram():
                 llego_archivo = any(msg.get(k) for k in ("document", "photo", "voice", "audio", "video"))
                 if (not texto and not llego_archivo) or not chat:
                     continue
-                if permitido and str(chat) != str(permitido):
+                if not permitido:
+                    # Hasta que no llegue un "/start", el bot no obedece a nadie: el primer "/start" lo ata a ese chat.
+                    if texto.lower().startswith("/start"):
+                        estado_cambiar(lambda e, chat=chat: e.__setitem__("telegram_chat_id", chat))
+                        permitido = chat
+                        log.info("telegram: chat autorizado")
+                        _telegram_responder("Listo, desde ahora te hago caso solo a vos desde este chat." + chr(10) +
+                                            AYUDA_TELEGRAM)
+                    else:
+                        log.warning("mensaje de un chat sin autorizar (falta /start): %s", chat)
+                    continue
+                if str(chat) != str(permitido):
                     log.warning("mensaje de un chat no autorizado: %s", chat)
                     continue
                 if float(msg.get("date", 0)) < inicio - 300:   # mensajes viejos: no los ejecutamos
@@ -3758,7 +3831,8 @@ def escuchar_telegram():
                 anotar_charla("user", texto)
                 try:
                     respuesta = _orden_telegram(texto) or "Listo."
-                    anotar_charla("cerebro", respuesta)
+                    if not respuesta.startswith("Panel de Cerebro:"):   # el link lleva el token: no va a la memoria
+                        anotar_charla("cerebro", respuesta)
                     _telegram_responder(respuesta)
                 except Exception as e:
                     log.exception("orden telegram")

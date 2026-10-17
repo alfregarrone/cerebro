@@ -1,0 +1,17 @@
+[tool.ruff]
+line-length = 130
+# La skill corre en Alexa-hosted (Python 3.8+): nada de sintaxis más nueva en lambda/.
+target-version = "py38"
+extend-exclude = ["pruebas/_copia_*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B"]
+ignore = [
+    "E501",   # líneas largas: el prompt PERSONA y las regex son más legibles en una línea
+    "B905",   # zip(strict=) no existe en Python 3.8
+    "E741",   # `l` como variable en comprensiones cortas
+]
+
+[tool.ruff.lint.per-file-ignores]
+"pruebas/*" = ["E402"]
+"pc/whatsapp_app.py" = ["E402"]   # configura pyautogui antes de importar el resto

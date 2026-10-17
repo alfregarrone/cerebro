@@ -160,6 +160,8 @@ CATALOGO = {
     "whatsapp_confirmar": _e("WhatsApp", "Confirmar el envío",
                              "Manda el WhatsApp que quedó preparado (dura 10 minutos).", ["sí", "mandalo"],
                              peligrosa=True),
+    "whatsapp_cancelar": _e("WhatsApp", "Descartar el mensaje preparado",
+                            "Cancela el mensaje de WhatsApp que quedó esperando el \"sí\".", ["no", "cancelá"]),
     "whatsapp_leer": _e("WhatsApp", "Leer un chat", "Abre el chat y te manda al celular lo que dice (lo lee la IA).",
                         ["¿qué me escribió Laura?"], [_c("contacto", "Contacto", obligatorio=True)]),
     "whatsapp_resumen": _e("WhatsApp", "Mensajes sin leer", "Resume los chats sin leer y te lo manda al celular.",
@@ -632,7 +634,7 @@ def _lista_programados():
     salida = []
     for p in A._programados():
         q = dict(p)
-        q["cuando"] = _seguro(lambda: A._cuando(p), "")
+        q["cuando"] = _seguro(lambda p=p: A._cuando(p), "")
         q["proximo_texto"] = datetime.fromtimestamp(p["proximo"]).strftime("%d/%m %H:%M") if p.get("proximo") else ""
         q["faltan_seg"] = int(p["proximo"] - ahora_ts) if p.get("proximo") else None
         salida.append(q)
@@ -890,6 +892,8 @@ def api_olvidar_frase(cuerpo, consulta):
 def api_casa(cuerpo, consulta):
     try:
         casa = A._casa_modulo()
+        if not getattr(casa, "DISPONIBLE", True):
+            raise ImportError(casa.FALTAN)
     except (Exception, SystemExit):
         return {"ok": True, "disponible": False, "dispositivos": [], "apodos": {}, "colores": [], "escenas": [],
                 "aviso": "Faltan las librerías de luces y enchufes: ejecutá instalar-extras.bat en la PC."}

@@ -40,9 +40,9 @@ try:
 except ImportError:
     wizlight = None
 
-if Discover is None and wizlight is None:
-    print("Faltan las librerías. Instalalas con: pip install python-kasa pywizlight")
-    sys.exit(2)
+DISPONIBLE = Discover is not None or wizlight is not None
+FALTAN = "Faltan las librerías para manejar la casa. Instalalas con: pip install python-kasa pywizlight"
+# Antes acá había un sys.exit(2): importado desde el agente, un SystemExit mataba el hilo que lo importaba.
 
 try:
     CONFIG = json.loads((BASE / "config_pc.json").read_text(encoding="utf-8"))
@@ -283,17 +283,32 @@ LUCES = ("luz", "luces", "lampara", "lamparas", "lamparita", "foco", "focos", "v
 VERBOS_TODAS = {"prender": "Prendí las luces.", "apagar": "Apagué las luces."}
 
 
+RELLENO_LUZ = {"la", "las", "el", "los", "una", "un", "de", "del", "mi", "mis", "casa", "todas", "todo", "todos", "y"}
+
+
 def _varias(objetivo, datos):
-    """¿Pidió todas las luces? ('las luces', 'todas', o 'la luz' sin decir cuál cuando hay más de una)."""
+    """¿Pidió todas las luces? ('las luces', 'todas', o 'la luz' sin decir cuál cuando hay más de una).
+
+    'la luz del dormitorio' NO es todas: nombra una en particular (aunque no la conozcamos con ese nombre).
+    """
     if len(datos) < 2:
         return False
     if any(norm(a) and norm(a) in objetivo for a in _apodos()):
         return False
     palabras = objetivo.split()
+    if any(p not in LUCES and p not in RELLENO_LUZ for p in palabras):
+        return False
     return any(p in ("luces", "todas", "todo", "todos") for p in palabras) or any(p in LUCES for p in palabras)
 
 
+def _entero(valor):
+    """'40', '40%', '40.0', 40 -> 40."""
+    return int(float(str(valor).strip().rstrip("%").replace(",", ".")))
+
+
 async def _accion(nombre, que, valor=None):
+    if not DISPONIBLE:
+        return FALTAN
     datos = _guardados()
     objetivo = norm(nombre)
     if _varias(objetivo, datos):
@@ -306,7 +321,7 @@ async def _accion(nombre, que, valor=None):
         if que in VERBOS_TODAS:
             return VERBOS_TODAS[que]
         if que == "brillo":
-            return f"Puse las luces al {max(1, min(100, int(float(valor))))} por ciento."
+            return f"Puse las luces al {max(1, min(100, _entero(valor)))} por ciento."
         if que in ("color", "escena"):
             return f"Puse las luces en {valor}."
         return " ".join(bien)
@@ -332,8 +347,8 @@ async def _accion_uno(alias, info, que, valor=None):
         if not getattr(dev, "is_dimmable", False):
             texto = f"{alias} no permite regular el brillo."
         else:
-            await dev.set_brightness(max(1, min(100, int(valor))))
-            texto = f"Puse {alias} al {int(valor)} por ciento."
+            await dev.set_brightness(max(1, min(100, _entero(valor))))
+            texto = f"Puse {alias} al {_entero(valor)} por ciento."
     else:
         await dev.update()
         texto = f"{alias} está {'prendido' if dev.is_on else 'apagado'}."

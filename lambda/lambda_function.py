@@ -58,27 +58,41 @@ GOODBYES = ("eso es todo", "eso es todo gracias", "nada más", "nada más gracia
 CALLS = ("cerebro", "oye cerebro", "hola cerebro", "estás ahí")
 ACKS = ("¿Sí?", "Te escucho.", "Dime.")
 YES = ("sí", "si", "confirmo", "sí confirmo", "si confirmo", "dale", "hazlo", "hacelo", "adelante", "ok", "okay",
-       "claro", "sí por favor", "si por favor")
-NO = ("no", "cancelar", "cancela", "cancelá", "mejor no", "no lo hagas")
+       "claro", "sí por favor", "si por favor", "mandalo", "envialo", "enviala", "confirmado", "de una", "obvio",
+       "apagala", "apagalo", "reiniciala", "suspendela", "corregilo", "publicalo", "aprobado")
+NO = ("no", "cancelar", "cancela", "cancelá", "mejor no", "no lo hagas", "dejalo", "déjalo", "descartalo",
+      "no lo mandes", "no lo envíes", "no lo envies", "olvidalo", "nada", "no gracias")
+
+
+def es_si(t):
+    """'sí', 'sí, dale', 'dale mandalo', 'sí apagala'... (t ya viene en minúsculas y sin puntuación)."""
+    t = _sin_tildes(t).strip(" ,.")
+    palabras = re.split(r"[\s,]+", t)
+    return bool(t) and not es_no(t) and (t in YES or palabras[0] in ("si", "dale", "ok", "okay", "confirmo", "claro")
+                                         or any(w in ("mandalo", "envialo", "confirmado", "hacelo", "apagala",
+                                                      "aprobado", "publicalo") for w in palabras))
+
+
+def es_no(t):
+    t = _sin_tildes(t).strip(" ,.")
+    return bool(t) and (t in NO or re.match(r"(no|nop|nope|mejor no|cancel|dejalo|descarta|olvidalo)\b", t) is not None)
 
 # Acciones de la PC (las ejecuta pc/cerebro_pc.py)
 PC_ACTIONS = {"nota", "buscar_notas", "pendientes", "completar_pendiente", "abrir_web", "abrir_app", "musica",
               "volumen", "sistema", "tarea", "confirmar_tarea", "estado", "info_pc", "avisar",
-              "whatsapp", "whatsapp_confirmar", "whatsapp_leer", "pantalla_confirmar",
-              "casa", "casa_descubrir", "diagnostico", "frase", "recordar", "olvidar", "que_sabes", "whatsapp_editar", "aprender",
-    "programar", "programados", "borrar_programado", "compras",
-    "captura", "enviar_archivo", "cerrar_app", "tareas_estado", "cancelar_tarea",
-    "whatsapp_resumen", "whatsapp_archivo", "alertas", "nombrar_aparato", "buscar_aparatos",
-    "agenda", "mails", "salud_pc", "musica_control", "resumen_manana"}
-PC_INFO_ACTIONS = {"que_sabes", "olvidar", "buscar_notas", "pendientes", "estado", "tarea", "confirmar_tarea", "completar_pendiente",
-                   "info_pc", "whatsapp", "whatsapp_confirmar", "whatsapp_leer", "pantalla_confirmar",
-                   "casa", "casa_descubrir", "diagnostico", "frase", "recordar", "olvidar", "que_sabes", "whatsapp_editar", "aprender",
-    "programar", "programados", "borrar_programado", "compras",
-    "captura", "enviar_archivo", "cerrar_app", "tareas_estado", "cancelar_tarea",
-    "whatsapp_resumen", "whatsapp_archivo", "alertas", "nombrar_aparato", "buscar_aparatos",
-    "agenda", "mails", "salud_pc", "musica_control", "resumen_manana"}
+              "whatsapp", "whatsapp_confirmar", "whatsapp_cancelar", "whatsapp_leer", "pantalla_confirmar",
+              "casa", "casa_descubrir", "diagnostico", "frase", "recordar", "olvidar", "que_sabes", "whatsapp_editar",
+              "aprender", "programar", "programados", "borrar_programado", "compras",
+              "captura", "enviar_archivo", "cerrar_app", "tareas_estado", "cancelar_tarea",
+              "whatsapp_resumen", "whatsapp_archivo", "alertas", "nombrar_aparato", "buscar_aparatos",
+              "agenda", "mails", "salud_pc", "musica_control", "resumen_manana"}
+# Las que contestan algo que hay que decir (todas menos las que solo hacen: nota, abrir, música, volumen, avisar...)
+PC_INFO_ACTIONS = PC_ACTIONS - {"nota", "abrir_web", "abrir_app", "musica", "volumen", "sistema", "avisar"}
 PC_QUEUEABLE = {"nota", "completar_pendiente"}   # la PC las procesa al encenderse (hasta 12 h)
 CONFIRM_ORDERS = {"apagar": "apagar", "reiniciar": "reiniciar", "suspender": "suspender"}
+LIVE_KINDS = {"clima", "dolar", "noticias", "argentina", "convertir", "futbol", "cotizacion"}   # datos en vivo (red)
+QUE_SABES = ("que sabes de mi", "que te acordas de mi", "que recordas de mi", "que guardaste de mi", "que sabes sobre mi",
+             "que tenes guardado de mi", "que te acordas", "que recordas")
 
 PERSONA = """Eres un asistente de voz que funciona dentro de un Amazon Echo, con el estilo de Alexa.
 
@@ -408,45 +422,30 @@ def ask_ai(system, messages, max_tokens=400, search=None, timeout=None):
     raise last_error
 
 
-ACTIONS_RE = re.compile(r"ACCIONES:\s*(\[.*\])", re.S)
+ACTIONS_RE = re.compile(r"\**ACCIONES\**:?\**\s*(?:```(?:json)?\s*)?(?=\[)")
 
 
 def split_actions(text):
-    """Separate the spoken answer from the trailing ACCIONES JSON."""
-    m = ACTIONS_RE.search(text)
-    if not m:
-        return text.replace("ACCIONES:", "").strip(), []
-    speech = text[:m.start()].strip()
-    try:
-        actions = json.loads(m.group(1))
+    """Separate the spoken answer from the trailing ACCIONES JSON.
+
+    Tolera lo que suele hacer el modelo: cercos de markdown, texto después del JSON, dos líneas ACCIONES
+    (gana la primera que tenga JSON válido) y claves internas ("_confirmado") que no puede inventar él.
+    """
+    text = text or ""
+    for m in ACTIONS_RE.finditer(text):
+        try:
+            actions, _ = json.JSONDecoder().raw_decode(text, m.end())
+        except ValueError:
+            continue
         if not isinstance(actions, list):
-            actions = []
-    except ValueError:
-        logger.warning("bad actions json: %s", m.group(1))
-        actions = []
-    return speech, [a for a in actions if isinstance(a, dict)]
-
-
-def get_weather(timeout=2.0):
-    url = (
-        "https://api.open-meteo.com/v1/forecast"
-        f"?latitude={config.LATITUDE}&longitude={config.LONGITUDE}"
-        "&current=temperature_2m,weather_code,wind_speed_10m"
-        "&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max"
-        "&timezone=auto&forecast_days=1"
-    )
-    try:
-        with urllib.request.urlopen(url, timeout=timeout) as resp:
-            d = json.load(resp)
-        c, day = d["current"], d["daily"]
-        return (
-            f"ahora {c['temperature_2m']}°C (código WMO {c['weather_code']}), viento {c['wind_speed_10m']} km/h; "
-            f"hoy mínima {day['temperature_2m_min'][0]}°C, máxima {day['temperature_2m_max'][0]}°C, "
-            f"probabilidad de lluvia {day['precipitation_probability_max'][0]}%"
-        )
-    except Exception as e:  # weather is optional
-        logger.warning("weather failed: %s", e)
-        return "sin datos de clima"
+            continue
+        speech = text[:m.start()].strip().rstrip("`").strip()
+        limpias = [{k: v for k, v in a.items() if not str(k).startswith("_")} for a in actions if isinstance(a, dict)]
+        return speech, limpias
+    if "ACCIONES:" in text:
+        logger.warning("bad actions json: %s", text[-300:])
+    speech = re.sub(r"\**ACCIONES\**:.*$", "", text, flags=re.S).strip()
+    return speech, []
 
 
 def has_permission(handler_input, scope):
@@ -492,13 +491,16 @@ def send_to_pc(accion, datos, wait):
 
     deadline = time.time() + wait
     # Publicar y abrir el canal de respuesta tardan medio segundo cada uno: los hacemos a la vez.
+    # "since" hace que ntfy reenvíe lo que llegó al canal en los últimos segundos: si la PC contesta antes de
+    # que el canal quede abierto, la respuesta no se pierde.
     envio = ThreadPoolExecutor(max_workers=1)
     publicado = envio.submit(ntfy_publish, topic, json.dumps(msg, ensure_ascii=False))
     try:
-        with urllib.request.urlopen(f"https://ntfy.sh/{topic}-r/json", timeout=wait) as stream:
+        with urllib.request.urlopen(f"https://ntfy.sh/{topic}-r/json?since={msg['ts'] - 3}", timeout=wait) as stream:
             stream.readline()  # evento "open"
             publicado.result(timeout=max(0.5, deadline - time.time()))
             while time.time() < deadline:
+                _acotar_lectura(stream, deadline)
                 line = stream.readline()
                 if not line:
                     break
@@ -518,8 +520,17 @@ def send_to_pc(accion, datos, wait):
     return None
 
 
+def _acotar_lectura(stream, deadline):
+    """El timeout de urlopen es por lectura, no total: lo vamos achicando para no pasarnos del presupuesto."""
+    try:
+        sock = stream.fp.raw._sock
+        sock.settimeout(max(0.2, deadline - time.time()))
+    except Exception:
+        pass
+
+
 def notify_phone(text):
-    """Avisa al celular. Lo manda la PC (Telegram); si no responde, va por ntfy."""
+    """Avisa al celular. Lo manda la PC (Telegram). Sin agente de PC no hay a dónde mandarlo."""
     topic, _ = pc_link()
     if not topic:
         return False
@@ -530,17 +541,24 @@ def notify_phone(text):
         return False
 
 
+_FONDO = ThreadPoolExecutor(max_workers=2)   # envíos que no esperan respuesta (memoria a la PC)
+
+
 def send_to_pc_async(accion, datos):
-    """Manda una orden a la PC sin esperar respuesta: sirve para sincronizar la memoria."""
+    """Manda una orden a la PC sin esperar respuesta: sirve para sincronizar la memoria. No bloquea el turno."""
     topic, secret = pc_link()
     if not topic:
         return
     msg = {"id": uuid.uuid4().hex[:16], "ts": int(time.time()), "accion": accion, "datos": datos}
     msg["firma"] = _sign(secret, f'{msg["id"]}|{msg["ts"]}|{accion}|{json.dumps(datos, sort_keys=True, ensure_ascii=False)}')
-    try:
-        ntfy_publish(topic, json.dumps(msg, ensure_ascii=False), timeout=1.5)
-    except Exception as e:
-        logger.warning("no pude sincronizar con la PC: %s", e)
+
+    def mandar():
+        try:
+            ntfy_publish(topic, json.dumps(msg, ensure_ascii=False), timeout=2.5)
+        except Exception as e:
+            logger.warning("no pude sincronizar con la PC: %s", e)
+
+    _FONDO.submit(mandar)
 
 
 def run_pc_action(a, deadline):
@@ -609,24 +627,39 @@ def via_rapida(frase):
 
     Devuelve (accion, datos, respuesta_hablada) o None si hay que pensarlo.
     """
-    t = _sin_tildes(frase).strip(" .!?¡¿,")
+    t = _sin_tildes(frase).replace("ñ", "n").strip(" .!?¡¿,")
     if t.startswith(("no ", "no,", "cuando ")) or "queria" in t or "quise" in t:
         return None     # es una corrección o una explicación: la piensa la IA para aprenderla
+
+    # la computadora: apagar, reiniciar, suspender y bloquear (lo delicado pide confirmación en run_actions)
+    m = re.match(r"(apaga|apagame|apagala|reinicia|reiniciame|reiniciala|suspende|suspendela|bloquea|bloqueala)"
+                 r"(me|la)?\s+(la\s+|el\s+|mi\s+)?(pc|compu|computadora|maquina|notebook|equipo)\b", t)
+    if m:
+        verbo = m.group(1)
+        orden = ("apagar" if verbo.startswith("apaga") else "reiniciar" if verbo.startswith("reinicia")
+                 else "suspender" if verbo.startswith("suspende") else "bloquear")
+        return "sistema", {"orden": orden}, "Listo"
 
     # luces: prender y apagar
     for verbo, accion, dicho in (("prende", "prender", "Listo"), ("encende", "prender", "Listo"),
                                  ("apaga", "apagar", "Listo")):
         if t.startswith(verbo):
             resto = t[len(verbo):].strip()
-            for basura in ("la ", "el ", "las ", "los "):
+            for basura in ("me ", "la ", "el ", "las ", "los ", "mi "):
                 if resto.startswith(basura):
                     resto = resto[len(basura):]
+            if " y " in resto or len(resto.split()) > 4:
+                return None             # "apagá la luz y poné música": lo parte el ChatHandler o lo piensa la IA
             return "casa", {"dispositivo": resto or "luz", "accion": accion}, dicho
 
-    hay_luz = "luz" in t or "luces" in t or "lampara" in t
+    hay_luz = re.search(r"\b(luz|luces|lampara|lamparas|lamparita|velador)\b", t) is not None
     if hay_luz and re.search(r"\b(esta|estan|quedo|quedaron|sigue|siguen)\s+(prendid|encendid|apagad)|^como (esta|estan) la", t):
         m = re.search(r"\b(?:la|las|el)\s+((?:luz|luces|lampara)(?:\s+del?\s+\w+)?)", t)
         return "casa", {"dispositivo": m.group(1) if m else "luz", "accion": "estado"}, "No pude leer la luz."
+    # "me gusta la luz azul", "¿qué luz baja mejor?": no son órdenes
+    if hay_luz and (re.match(r"(que|cual|cuanto|como|por que|donde|me gusta|quiero saber)\b", t) or t.endswith("?")
+                    or len(t.split()) > 8):
+        hay_luz = False
     if hay_luz:
         # color
         for color in COLORES_RAPIDOS:
@@ -657,8 +690,10 @@ def via_rapida(frase):
     if re.match(r"^(que hay en |leeme |decime |que tengo en |mostrame )?(la |mi )?lista( de compras| del super)?$", t) \
             or t in ("que tengo que comprar", "que falta comprar"):
         return "compras", {}, ""
-    m = re.match(r"^(agrega|agregame|agregar|suma|sumale|anota|anotame|pone|poneme)\s+(.+?)\s+(a|en)\s+(la\s+|mi\s+)?"
-                 r"lista(\s+de\s+compras|\s+del\s+super)?$", t)
+    m = (re.match(r"^(agrega|agregame|agregar|suma|sumale|anota|anotame|pone|poneme)\s+(.+?)\s+(a|en)\s+(la\s+|mi\s+)?"
+                  r"lista(\s+de\s+compras|\s+del\s+super)?$", t)
+         or re.match(r"^(agrega|agregame|anota|anotame|pone|poneme)\s+(?:a|en)\s+(?:la\s+|mi\s+)?(?:lista(?:\s+de\s+compras)?|"
+                     r"compras)\s*:?\s+(.+)$", t))
     if m:
         items = [x.strip() for x in re.split(r",\s*|\s+y\s+", m.group(2)) if x.strip()]
         return "compras", {"agregar": items}, "Agregado"
@@ -684,8 +719,10 @@ def via_rapida(frase):
     for patron, que in MUSICA_VOZ:
         if re.match(patron, t):
             return "musica_control", {"accion": que}, ""
-    if re.search(r"\bresumen\b", t) and re.search(r"\ba las\s+(\d|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|"
-                                                   r"diez|once|doce)\b", t):
+    es_resumen_cfg = re.search(r"\bresumen\b", t) and re.search(r"\b(manana|mananas|de la manana|del dia|diario|"
+                                                                  r"mandame|mandamelo|quiero|pone|pasa|cambia)\b", t) \
+        and not re.search(r"\b(de la reunion|del texto|de esto|de la charla|hace|hacer|arma|armame|escribi)\b", t)
+    if es_resumen_cfg and re.search(r"\ba las\s+(\d|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce)\b", t):
         dias = {"dias": "semana"} if re.search(r"lunes a viernes|dias de semana|dias habiles", t) else {}
         return "resumen_manana", {"hora": t.split("a las", 1)[1], **dias}, ""
     if re.search(r"\bresumen\b", t) and re.match(r"(desactiva|saca|apaga|frena|cancela|no me mandes)", t):
@@ -693,8 +730,8 @@ def via_rapida(frase):
 
     # volumen de la PC
     if "volumen" in t:
-        n = re.findall(r"\d{1,3}", t)
-        if n and ("al " in t or "en " in t):
+        n = re.findall(r"\b(?:al|en|a)\s+(\d{1,3})\b", t)
+        if n:
             return "volumen", {"nivel": int(n[-1])}, "Listo"
         if any(x in t for x in ("subi", "sube", "subir", "mas alto", "aumenta")):
             return "volumen", {"cambio": "subir", "pasos": 5}, "Listo"
@@ -753,9 +790,17 @@ def run_actions(handler_input, actions, memory, deadline):
     """
     out = {"problems": [], "info": [], "missing": [], "end": False, "confirm": None, "audio": None}
     session = handler_input.attributes_manager.session_attributes
-    for a in actions:
+    vivos = lanzar_datos_vivos(actions, deadline)
+    for i, a in enumerate(actions):
         kind = a.get("tipo")
         try:
+            if i in vivos:
+                try:
+                    out["info"].append(vivos[i].result(timeout=max(0.2, deadline - time.time())))
+                except Exception as e:
+                    logger.warning("dato en vivo %s: %s", kind, e)
+                    out["problems"].append("No pude conseguir ese dato ahora. Probá de nuevo en un rato.")
+                continue
             if kind == "recordar" and a.get("dato"):
                 dato = str(a["dato"]).strip()
                 if dato not in memory["facts"]:
@@ -794,31 +839,6 @@ def run_actions(handler_input, actions, memory, deadline):
                     out["problems"].append("Para ver tus recordatorios necesito tu permiso. Te dejé una tarjeta en la app de Alexa.")
                     continue
                 out["info"].append(gestionar_recordatorios(handler_input, kind, a))
-            elif kind in ("clima", "dolar", "noticias"):
-                try:
-                    out["info"].append(clima(a.get("ciudad"), a.get("dia", 0)) if kind == "clima" else
-                                       dolar() if kind == "dolar" else noticias(str(a.get("tema") or "")))
-                except Exception as e:
-                    logger.warning("dato en vivo %s: %s", kind, e)
-                    out["problems"].append("No pude conseguir ese dato ahora. Probá de nuevo en un rato.")
-            elif kind in ("argentina", "convertir"):
-                try:
-                    if kind == "convertir":
-                        r = convertir(_sin_tildes(str(a.get("texto") or "")).replace("ñ", "n").strip(" .!?¡¿,"))
-                    else:
-                        dato = _sin_tildes(str(a.get("dato") or ""))
-                        r = riesgo_pais() if "riesgo" in dato else inflacion() if "infla" in dato else proximo_feriado()
-                    out["info"].append(r or "No entendí qué convertir.")
-                except Exception as e:
-                    logger.warning("dato argentino %s: %s", kind, e)
-                    out["problems"].append("No pude conseguir ese dato ahora. Probá de nuevo en un rato.")
-            elif kind in ("futbol", "cotizacion"):
-                try:
-                    out["info"].append(futbol(str(a.get("equipo") or "")) if kind == "futbol"
-                                       else cotizacion(str(a.get("moneda") or "")))
-                except Exception as e:
-                    logger.warning("dato en vivo %s: %s", kind, e)
-                    out["problems"].append("No pude conseguir ese dato ahora. Probá de nuevo en un rato.")
             elif kind == "radio":
                 radio = buscar_radio(str(a.get("nombre") or "")) if soporta_audio(handler_input) else None
                 if radio:
@@ -840,6 +860,11 @@ def run_actions(handler_input, actions, memory, deadline):
                 if a.get("accion") == "sistema" and orden in CONFIRM_ORDERS and not a.get("_confirmado"):
                     session["pending"] = a
                     out["confirm"] = f"¿Confirmas que quieres {CONFIRM_ORDERS[orden]} la PC?"
+                    continue
+                if a.get("accion") == "tarea" and str((a.get("datos") or {}).get("modo", "")) == "pantalla" \
+                        and not a.get("_confirmado") and _pide_publicar(a):
+                    session["pending"] = a
+                    out["confirm"] = "Es una tarea que maneja la pantalla y puede mandar o publicar algo. ¿La hago?"
                     continue
                 if a.get("accion") in ("whatsapp", "whatsapp_editar", "whatsapp_archivo") and not a.get("_confirmado"):
                     result, text = run_pc_action(a, deadline)
@@ -873,6 +898,45 @@ def run_actions(handler_input, actions, memory, deadline):
     return out
 
 
+def _pide_publicar(a):
+    """¿La tarea de pantalla dice explícitamente enviar o publicar algo que vean terceros?"""
+    texto = _sin_tildes(str((a.get("datos") or {}).get("instruccion", "")))
+    return bool(re.search(r"\b(publica|publicar|envia|enviar|manda|mandar|responde|responder|postea|postear|comenta|"
+                          r"comentar|compra|comprar|paga|pagar|transferi|transferir)\b", texto)) \
+        and not re.search(r"\bsin (publicar|enviar|mandar)\b|dejar(la|lo)? list[ao]", texto)
+
+
+def lanzar_datos_vivos(actions, deadline):
+    """Las acciones que consultan internet se lanzan todas a la vez, con el presupuesto que queda. {índice: future}."""
+    vivos = {}
+    pedidos = [(i, a) for i, a in enumerate(actions) if a.get("tipo") in LIVE_KINDS]
+    if not pedidos:
+        return vivos
+    pool = ThreadPoolExecutor(max_workers=len(pedidos))
+    for i, a in pedidos:
+        vivos[i] = pool.submit(dato_vivo, a, deadline)
+    pool.shutdown(wait=False)
+    return vivos
+
+
+def dato_vivo(a, deadline):
+    kind = a.get("tipo")
+    if kind == "clima":
+        return clima(a.get("ciudad"), a.get("dia", 0))
+    if kind == "dolar":
+        return dolar()
+    if kind == "noticias":
+        return noticias(str(a.get("tema") or ""))
+    if kind == "convertir":
+        return convertir(_sin_tildes(str(a.get("texto") or "")).replace("ñ", "n").strip(" .!?¡¿,")) or "No entendí qué convertir."
+    if kind == "argentina":
+        dato = _sin_tildes(str(a.get("dato") or ""))
+        return riesgo_pais() if "riesgo" in dato else inflacion() if "infla" in dato else proximo_feriado()
+    if kind == "futbol":
+        return futbol(str(a.get("equipo") or ""), deadline)
+    return cotizacion(str(a.get("moneda") or ""))
+
+
 def create_reminder(handler_input, a):
     now = now_local()
     text = str(a.get("texto") or "Recordatorio")
@@ -899,7 +963,7 @@ def create_reminder(handler_input, a):
 
 
 def create_timer(handler_input, a):
-    seconds = max(1, int(float(a.get("segundos", 60))))
+    seconds = max(1, min(24 * 3600, int(float(a.get("segundos", 60)))))   # Alexa no acepta más de un día
     request = TimerRequest(
         duration=f"PT{seconds}S",
         timer_label=str(a.get("etiqueta") or "Temporizador")[:40],
@@ -929,11 +993,24 @@ def reglas_repeticion(rep):
         cada = max(1, int(float(rep.get("cada_horas") or 1)))
         h1, m1 = _hm(rep.get("desde"), "08:00")
         h2, _ = _hm(rep.get("hasta"), "22:00")
-        return [f"FREQ=DAILY;BYHOUR={h};BYMINUTE={m1};BYSECOND=0;INTERVAL=1;" for h in range(h1, h2 + 1, cada)][:12]
+        if h2 < h1:                     # "de 22 a 6": la franja cruza la medianoche
+            horas = list(range(h1, 24, cada)) + list(range((h1 + cada) % 24 if (h1 + cada) >= 24 else 0, h2 + 1, cada))
+        else:
+            horas = list(range(h1, h2 + 1, cada))
+        return [f"FREQ=DAILY;BYHOUR={h};BYMINUTE={m1};BYSECOND=0;INTERVAL=1;" for h in horas][:12]
     h, m = _hm(rep.get("hora"), "09:00")
     dias = rep.get("dias") or []
     if isinstance(dias, str):
-        dias = re.split(r"[,\s]+", dias)
+        dias = [dias]
+    texto_dias = _sin_tildes(" ".join(str(d) for d in dias))
+    if re.search(r"lunes a viernes|dias? habil|dias? de semana|entre semana", texto_dias):
+        dias = ["lunes", "martes", "miercoles", "jueves", "viernes"]
+    elif re.search(r"fin(es)? de semana|finde", texto_dias):
+        dias = ["sabado", "domingo"]
+    elif re.search(r"todos los dias|cada dia|diario", texto_dias):
+        dias = []
+    else:
+        dias = [x for d in dias for x in re.split(r"[,\s]+", str(d)) if x]
     claves = [_sin_tildes(str(d)).strip() for d in dias if str(d).strip()]
     dias = [DIAS_RRULE.get(k) or DIAS_RRULE.get(k.rstrip("s")) or k.upper()[:2] for k in claves]
     dias = [d for d in dias if d in DIAS_RRULE.values()]
@@ -969,6 +1046,8 @@ def gestionar_recordatorios(handler_input, kind, a):
             else:
                 cuando = ""
             partes.append(f"{texto(r)} {cuando}".strip())
+        if len(activos) == 1:
+            return "Tienes un recordatorio: " + partes[0] + "."
         return f"Tienes {len(activos)} recordatorios: " + "; ".join(partes) + "."
     objetivo = _sin_tildes(str(a.get("texto") or "")).strip()
     if not objetivo:
@@ -1071,12 +1150,18 @@ def info_rapida(frase):
         if re.search(r"\b(proximo feriado|hay feriado|cuando es el feriado|el feriado|feriado largo|feriados)\b", t) \
                 and len(t) < 60:
             return proximo_feriado()
-        if "riesgo pais" in t and len(t) < 45:
+        explicacion = re.match(r"(que es|que significa|explicame|explica|por que|como funciona|como se calcula)", t)
+        if "riesgo pais" in t and len(t) < 45 and not explicacion:
             return riesgo_pais()
-        if "inflacion" in t and len(t) < 45 and not t.startswith(("que es", "explicame")):
+        if "inflacion" in t and len(t) < 45 and not explicacion and not re.search(r"\b(de|en) (19|20)\d\d\b|\bde (enero|"
+                                                                                 r"febrero|marzo|abril|mayo|junio|julio|"
+                                                                                 r"agosto|septiembre|octubre|noviembre|"
+                                                                                 r"diciembre)\b", t):
             return inflacion()
-        if "dolar" in t and len(t) < 40 and not t.startswith(("no ", "cuando")) and "alerta" not in t \
-                and not re.match(r"(activa|desactiva|apaga|prende|saca|pone)", t):
+        if len(t) < 45 and re.match(r"((a )?cuanto (esta|vale|cotiza|cerro|abrio|anda)|como (esta|anda|va|cerro|abrio)|"
+                                    r"(el )?precio|(la )?cotizacion|(el )?valor|cuanto sale|que onda|como viene|novedades)"
+                                    r"( del?| el| con el)? dolar( (blue|oficial|hoy|ahora|mep|tarjeta|cripto))?$|^(el )?dolar"
+                                    r"( (blue|oficial|hoy|ahora|mep|tarjeta))?$|^(dolar|el dolar) (como|a cuanto) (esta|anda)$", t):
             return dolar()
         m = re.match(r"(como salio|cuando juega|contra quien juega|a que hora juega|resultado de|como va el partido de)"
                      r"\s+(el |la )?(.+)$", t)
@@ -1102,30 +1187,48 @@ def info_rapida(frase):
 
 NUMEROS_ES = {"un": 1, "una": 1, "uno": 1, "dos": 2, "tres": 3, "cuatro": 4, "cinco": 5, "seis": 6, "siete": 7,
               "ocho": 8, "nueve": 9, "diez": 10, "once": 11, "doce": 12, "trece": 13, "catorce": 14, "quince": 15,
-              "dieciseis": 16, "diecisiete": 17, "dieciocho": 18, "diecinueve": 19, "veinte": 20,
-              "veinticinco": 25, "treinta": 30, "cuarenta": 40, "cuarenta y cinco": 45, "cincuenta": 50,
-              "sesenta": 60, "noventa": 90}
-_NUM = r"\b(\d+(?:[.,]\d+)?|" + "|".join(sorted(NUMEROS_ES, key=len, reverse=True)) + r")"
+              "dieciseis": 16, "diecisiete": 17, "dieciocho": 18, "diecinueve": 19, "veinte": 20, "veintiuno": 21,
+              "veintiun": 21, "veintidos": 22, "veintitres": 23, "veinticuatro": 24, "veinticinco": 25,
+              "veintiseis": 26, "veintisiete": 27, "veintiocho": 28, "veintinueve": 29, "treinta": 30,
+              "cuarenta": 40, "cuarenta y cinco": 45, "cincuenta": 50, "sesenta": 60, "setenta": 70, "ochenta": 80,
+              "noventa": 90, "cien": 100}
+_DECENAS = r"(?:treinta|cuarenta|cincuenta|sesenta|setenta|ochenta|noventa)\s+y\s+(?:un|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve)"
+_NUM = r"\b(\d+(?:[.,]\d+)?|" + _DECENAS + "|" + "|".join(sorted(NUMEROS_ES, key=len, reverse=True)) + r")"
 _UNIDAD = r"\s*(horas?|hs|minutos?|mins?|segundos?|segs?)\b"
 
 
 def _numero(s):
+    """'diez', 'treinta y cinco', '1,5', '2.5' -> número."""
     s = s.strip()
-    return NUMEROS_ES[s] if s in NUMEROS_ES else float(s.replace(",", "."))
+    if s in NUMEROS_ES:
+        return NUMEROS_ES[s]
+    if " y " in s:
+        return sum(NUMEROS_ES.get(p, 0) for p in s.split(" y "))
+    return float(s.replace(",", "."))
 
 
 def duracion(t):
-    """Segundos de 'diez minutos', '1 hora y media', 'media hora', '30 segundos'; None si no dice un tiempo."""
+    """Segundos de 'diez minutos', '1 hora y media', 'hora y media', 'media hora', 'treinta y cinco minutos',
+    'un minuto y medio', '30 segundos'; None si no dice un tiempo."""
     total = 0.0
     if re.search(r"\bmedia hora\b", t):
         total += 1800
-    if re.search(r"\bcuarto de hora\b", t):
+    if re.search(r"\b(un )?cuarto de hora\b", t):
         total += 900
+    con_numero = set()
     for m in re.finditer(_NUM + _UNIDAD, t):
         n, u = _numero(m.group(1)), m.group(2)
         total += n * (3600 if u.startswith("h") else 60 if u.startswith("m") else 1)
-    if re.search(r"\bhoras?\s+y\s+media\b", t):
-        total += 1800
+        con_numero.add(u[0])
+    m = re.search(r"\bhoras?\s+y\s+(media|cuarto)\b", t)
+    if m:                                   # "una hora y media" / "hora y media" (sin el número)
+        total += 1800 if m.group(1) == "media" else 900
+        if "h" not in con_numero:
+            total += 3600
+    if re.search(r"\bminutos?\s+y\s+medio\b", t):
+        total += 30
+        if "m" not in con_numero:
+            total += 60
     return int(total) or None
 
 
@@ -1138,7 +1241,7 @@ def decir_duracion(seg):
     if m:
         partes.append("un minuto" if m == 1 else f"{m} minutos")
     if s:
-        partes.append(f"{s} segundos")
+        partes.append("un segundo" if s == 1 else f"{s} segundos")
     return " y ".join(partes) or "un momento"
 
 
@@ -1196,17 +1299,21 @@ def voz_rapida(handler_input, query):
         return None
     es_timer = re.search(r"\b(temporizador|temporizadores|timer|cronometro)\b", t)
     kind = None
-    if es_timer and (t.startswith("para ") or re.search(
-            r"\b(cancel|borr|elimin|fren|apag|saca|quita|detene)\w*", t)):
+    if es_timer and (re.match(r"para(me|lo|los)?\s+(el|los|ese|este|mi)?\s*(temporizador|temporizadores|timer|cronometro)", t)
+                     or re.match(r"(cancel|borr|elimin|fren|apag|saca|quita|detene)\w*\b", t)
+                     or re.search(r"\b(cancel|borr|elimin|fren|apag|saca|quita|detene)\w*\s+(el|los|ese|este|mi|todos los)?"
+                                  r"\s*(temporizador|temporizadores|timer|cronometro)", t)):
         kind = "cancelar_temporizador"
     elif es_timer and re.search(r"\bcuanto\b.*\b(falta|queda)", t):
         kind = "temporizadores"
+    aviso = re.match(r"(avisame|llamame|despertame)\s+en\s+(.+)$", t)
     try:
         if kind:
             if not has_permission(handler_input, TIMERS_SCOPE):
                 return "Para usar temporizadores necesito tu permiso. Te dejé una tarjeta en la app de Alexa.", [TIMERS_SCOPE]
             return gestionar_temporizadores(handler_input, kind), []
-        if es_timer or re.match(r"(avisame|llamame) en ", t):
+        # "avisame en diez minutos" (sin más) es un temporizador; con un mensaje es un recordatorio (más abajo)
+        if es_timer or (aviso and not quitar_duracion(aviso.group(2))):
             seg = duracion(t)
             if not seg or "cada" in t or "a las" in t:
                 return None
@@ -1242,12 +1349,12 @@ def voz_rapida(handler_input, query):
         alarma = alarma_rapida(handler_input, orig, t)
         if alarma:
             return alarma
-        m = re.match(r"(recordame|recordarme|acordame|recorda)\s+(que\s+)?(.+)$", t)
+        m = re.match(r"(recordame|recordarme|acordame|recorda|avisame|llamame)\s+(que\s+)?(.+)$", t)
         if m and " en " in t and not re.search(
                 r"\b(cada|todos|todas|a las|manana|lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b", t):
             seg = duracion(m.group(3))
-            q = re.search(r"\s*\ben\s+(?:\S+\s+){0,3}?(horas?|hs|minutos?|mins?|segundos?|segs?|media hora|"
-                          r"cuarto de hora)\b(\s+y\s+media)?", m.group(3))
+            q = re.search(r"\s*\ben\s+(?:\S+\s+){0,4}?(horas?|hs|minutos?|mins?|segundos?|segs?|media hora|"
+                          r"cuarto de hora)\b(\s+y\s+(media|medio|cuarto))?", m.group(3))
             if seg and q:
                 resto = orig[m.start(3):]
                 texto = (resto[:q.start()] + resto[q.end():]).strip(" ,.")
@@ -1263,6 +1370,14 @@ def voz_rapida(handler_input, query):
     return None
 
 
+def quitar_duracion(s):
+    """'diez minutos que saque la pizza' -> 'saque la pizza'; 'diez minutos' -> ''."""
+    s = re.sub(_NUM + _UNIDAD, " ", s)
+    s = re.sub(r"\b(media hora|cuarto de hora|y media|y medio|y cuarto)\b", " ", s)
+    s = re.sub(r"\s+", " ", s).strip(" ,.")
+    return re.sub(r"^(que|de|para|a)\s+", "", s).strip()
+
+
 # ---------- radio en vivo en el Echo ----------
 
 def soporta_audio(handler_input):
@@ -1272,28 +1387,42 @@ def soporta_audio(handler_input):
         return False
 
 
-def buscar_radio(nombre):
-    """Busca la radio en radio-browser.info (gratis) y devuelve (nombre, url https) o None."""
+def buscar_radio(nombre, deadline=None):
+    """Busca la radio en radio-browser.info (gratis) y devuelve (nombre, url https) o None.
+
+    Respeta el presupuesto: cada llamada de red usa lo que queda hasta `deadline` (máximo 2 s por llamada).
+    """
     nombre = re.sub(r"^((la|el)\s+|radio\s+)+", "", str(nombre or "").strip(), flags=re.I)
     if not nombre:
         return None
+    deadline = deadline or (time.time() + 5.5)
+
+    def queda():
+        return min(2.0, deadline - time.time())
+
     base = ("https://de1.api.radio-browser.info/json/stations/search?limit=12&hidebroken=true"
             "&order=clickcount&reverse=true&name=" + urllib.parse.quote(nombre))
     estaciones = []
     for pais in ("&countrycode=AR", ""):
+        if queda() < 0.5:
+            break
         try:
-            estaciones = json.loads(_leer_web(base + pais, timeout=2.0))
+            estaciones = json.loads(_leer_web(base + pais, timeout=queda()))
         except Exception as e:
             logger.warning("radio-browser: %s", e)
         if estaciones:
             break
-    for e in estaciones[:6]:
+    # Alexa solo reproduce https: las https primero, y las http solo si redirigen a https
+    estaciones = sorted(estaciones[:8], key=lambda e: not str(e.get("url_resolved") or e.get("url") or "").startswith("https://"))
+    for e in estaciones:
+        if queda() < 0.5:
+            break
         url = str(e.get("url_resolved") or e.get("url") or "")
-        if not url.startswith("https://"):
+        if not url.startswith(("https://", "http://")):
             continue
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-            with urllib.request.urlopen(req, timeout=2.0) as r:
+            with urllib.request.urlopen(req, timeout=queda()) as r:
                 final, tipo = r.geturl(), str(r.headers.get("Content-Type") or "")
             if final.startswith("https://") and any(x in tipo for x in ("audio", "mpegurl", "octet")):
                 corto = re.split(r"\s+-\s+|\.\s|\(|\|", str(e.get("name") or nombre))[0].strip()
@@ -1352,7 +1481,10 @@ def _partido(e):
         dia = ("hoy" if cuando.date() == hoy else "mañana" if cuando.date() == hoy + timedelta(days=1)
                else "el " + DIAS_ES[cuando.weekday()])
         return f"{nl} contra {nv}, {dia} a las {cuando.hour}:{cuando.minute:02d}"
-    marcador = f"{nl} {local.get('score', 0)}, {nv} {visita.get('score', 0)}"
+    detalle = _sin_tildes(str(e["status"]["type"].get("description") or e["status"]["type"].get("name") or ""))
+    if estado == "post" and re.search(r"postpon|suspend|cancel|abandon", detalle):
+        return f"{nl} contra {nv}, suspendido"
+    marcador = f"{nl} {local.get('score') or 0}, {nv} {visita.get('score') or 0}"
     return marcador + (", en juego" if estado == "in" else ", final")
 
 
@@ -1373,7 +1505,7 @@ def _sportsdb(ruta):
 def _evento_sdb(e):
     local, visita = e.get("strHomeTeam"), e.get("strAwayTeam")
     if e.get("intHomeScore") not in (None, ""):
-        return f"{local} {e['intHomeScore']}, {visita} {e['intAwayScore']}"
+        return f"{local} {e['intHomeScore']}, {visita} {e.get('intAwayScore') or 0}"
     ts = e.get("strTimestamp") or f"{e.get('dateEvent')}T{e.get('strTime') or '00:00:00'}"
     cuando = datetime.fromisoformat(str(ts)[:19]).replace(tzinfo=timezone.utc).astimezone(
         timezone(timedelta(hours=config.UTC_OFFSET_HOURS)))
@@ -1426,8 +1558,9 @@ def futbol_equipo(equipo):
     return ". ".join(partes) + "." if partes else None
 
 
-def futbol(equipo=""):
+def futbol(equipo="", deadline=None):
     objetivo = _sin_tildes(str(equipo or "")).strip()
+    deadline = deadline or (time.time() + 6.0)
     if objetivo:
         try:
             r = futbol_equipo(equipo)
@@ -1435,6 +1568,8 @@ def futbol(equipo=""):
                 return r
         except Exception as e:
             logger.warning("thesportsdb: %s", e)
+        if deadline - time.time() < 2.0:      # sin tiempo para la segunda fuente: mejor decirlo que cortar
+            return f"No encontré un partido de {equipo} ahora."
     with ThreadPoolExecutor(max_workers=len(LIGAS)) as pool:
         resultados = list(zip(LIGAS, pool.map(_espn, [codigo for codigo, _ in LIGAS])))
     if not objetivo:
@@ -1478,7 +1613,8 @@ DIAS_PLANOS = ("lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "d
 def cuando_absoluto(t, temprano=False):
     """'a las 7', 'mañana a las 18:30', 'el lunes a las 9 de la noche' -> (datetime local, tramos a quitar)."""
     m = re.search(r"\ba\s+las?\s+(\d{1,2}|" + "|".join(sorted(HORAS_ES, key=len, reverse=True)) + r")"
-                  r"(?:(?::|\.|\s+y\s+)(\d{2}|media|cuarto|quince|treinta|cuarenta y cinco))?"
+                  r"(?:(?::|\.|\s+y\s+)(\d{2}|media|cuarto|quince|treinta|cuarenta y cinco)|"
+                  r"\s+menos\s+(cuarto|diez|veinte|cinco|quince))?"
                   r"(?:\s*(?:hs|horas|en punto))?(?:\s+de\s+la\s+(manana|tarde|noche|madrugada))?", t)
     if not m:
         return None
@@ -1487,9 +1623,16 @@ def cuando_absoluto(t, temprano=False):
     if m.group(2):
         mi = {"media": 30, "cuarto": 15, "quince": 15, "treinta": 30, "cuarenta y cinco": 45}.get(m.group(2))
         mi = mi if mi is not None else min(59, int(m.group(2)))
-    parte = m.group(3)
+    elif m.group(3):                         # "siete menos cuarto" = 6:45
+        mi = 60 - {"cuarto": 15, "quince": 15, "diez": 10, "veinte": 20, "cinco": 5}[m.group(3)]
+        h = (h - 1) % 24
+    parte = m.group(4)
     if parte in ("tarde", "noche") and h < 12:
         h += 12
+    if parte in ("noche", "madrugada") and h == 12:   # "las 12 de la noche"
+        h = 0
+    if h == 24:
+        h = 0
     if h > 23:
         return None
     ahora = now_local().replace(tzinfo=None, second=0, microsecond=0)
@@ -1504,7 +1647,12 @@ def cuando_absoluto(t, temprano=False):
         delta = (DIAS_PLANOS.index(mw.group(2)) - ahora.weekday()) % 7 or 7
         dia, explicito = ahora.date() + timedelta(days=delta), True
         tramos.append(mw.span())
-    horas = [h] if (parte or h >= 12 or temprano) else [h, h + 12]
+    if parte or h >= 12 or temprano or h == 0:
+        horas = [h]
+    elif explicito and 1 <= h <= 6:          # "el lunes a las 3" casi siempre es a la tarde; una alarma, no
+        horas = [h + 12, h]
+    else:
+        horas = [h, h + 12]
     for hh in horas:
         c = datetime(dia.year, dia.month, dia.day, hh, mi)
         if c > ahora:
@@ -1559,17 +1707,17 @@ def alarma_rapida(handler_input, orig, t):
 
 PALABRAS_NUM = {"cien": 100, "ciento": 100, "doscientos": 200, "trescientos": 300, "cuatrocientos": 400,
                 "quinientos": 500, "seiscientos": 600, "setecientos": 700, "ochocientos": 800, "novecientos": 900,
-                "mil": 1000, "millon": 1000000, "millones": 1000000, "veintiuno": 21, "veintidos": 22,
-                "veintitres": 23, "treintaicinco": 35}
+                "mil": 1000, "millon": 1000000, "millones": 1000000, "treintaicinco": 35, "medio": 0.5, "media": 0.5}
 PALABRAS_NUM.update({k: v for k, v in NUMEROS_ES.items() if " " not in k})
 
 
 def numero_es(s):
-    """'100', '100.000', 'cien', 'dos mil quinientos' -> número, o None."""
+    """'100', '100.000', '1.5', '2,5', 'cien', 'dos mil quinientos', 'un millón y medio' -> número, o None."""
     s = s.strip()
-    plano = s.replace(".", "").replace(",", ".")
-    if re.fullmatch(r"\d+(\.\d+)?", plano):
-        return float(plano)
+    if re.fullmatch(r"\d{1,3}(\.\d{3})+(,\d+)?", s):          # 100.000 / 1.250.000,50 (punto de miles)
+        return float(s.replace(".", "").replace(",", "."))
+    if re.fullmatch(r"\d+([.,]\d+)?", s):                      # 1.5 / 2,5 / 100
+        return float(s.replace(",", "."))
     total = parcial = 0
     for w in s.split():
         if w == "y":
@@ -1619,7 +1767,10 @@ def inflacion():
     lista = _ar("finanzas/indices/inflacion")
     u, a = lista[-1], lista[-2]
     mes, mes_ant = MESES_ES[int(u["fecha"][5:7]) - 1], MESES_ES[int(a["fecha"][5:7]) - 1]
-    v = lambda x: str(x).replace(".", ",")
+
+    def v(x):
+        return str(x).replace(".", ",")
+
     return f"La inflación de {mes} fue de {v(u['valor'])} por ciento. En {mes_ant} había sido {v(a['valor'])}."
 
 
@@ -1688,21 +1839,6 @@ def contestar(handler_input, pregunta, texto, **kw):
     return respond(handler_input, texto, **kw)
 
 
-def es_atajo(frase, atajos):
-    """¿Es una de las frases que el usuario le enseñó a la PC? Tolera errores de la voz ("modo sine")."""
-    import difflib
-    t = _sin_tildes(frase).replace("ñ", "n").strip(" .!?¡¿,")
-    for a in atajos or []:
-        a = _sin_tildes(str(a)).replace("ñ", "n").strip()
-        if not a:
-            continue
-        if t == a or difflib.SequenceMatcher(None, a, t).ratio() >= 0.85:
-            return True
-        if len(a) >= 5 and len(t) <= len(a) + 20 and re.search(r"(^|\s)" + re.escape(a) + r"($|\s)", t):
-            return True
-    return False
-
-
 def _dice_lo_mismo(a, b):
     """¿Casi todas las palabras de a ya están en b? ('Desactivé las alertas.' vs 'Listo, desactivé las alertas.')"""
     pa = set(re.findall(r"\w{3,}", _sin_tildes(a)))
@@ -1711,8 +1847,8 @@ def _dice_lo_mismo(a, b):
 
 
 def compose_answer(speech, out):
-    if out["confirm"]:
-        return out["confirm"]
+    if out["confirm"]:                       # lo que ya pasó (un dato, un problema) se dice antes de preguntar
+        return " ".join(out["problems"] + out["info"] + [out["confirm"]])
     if out["problems"]:
         return " ".join(out["problems"] + out["info"])
     if out["info"] and len(speech) <= 25:   # "Un momento." sobra cuando ya tenemos el resultado
@@ -1763,8 +1899,10 @@ class LaunchHandler(AbstractRequestHandler):
 
 
 class ChatHandler(AbstractRequestHandler):
+    """Todo lo que se dice dentro de la skill, y también el "sí"/"no" que Alexa manda como Yes/NoIntent."""
     def can_handle(self, handler_input):
-        return is_intent_name("ChatIntent")(handler_input)
+        return (is_intent_name("ChatIntent")(handler_input) or is_intent_name("AMAZON.YesIntent")(handler_input)
+                or is_intent_name("AMAZON.NoIntent")(handler_input))
 
     def handle(self, handler_input):
         # Si algo tarda más de lo normal, Alexa dice "Un segundo" en vez de quedarse callada.
@@ -1778,8 +1916,13 @@ class ChatHandler(AbstractRequestHandler):
 
     def _handle(self, handler_input):
         deadline = time.time() + ALEXA_BUDGET
-        slots = handler_input.request_envelope.request.intent.slots or {}
+        pedido = handler_input.request_envelope.request.intent
+        slots = pedido.slots or {}
         query = (slots.get("query").value if slots.get("query") else None) or ""
+        if pedido.name == "AMAZON.YesIntent":
+            query = "sí"
+        elif pedido.name == "AMAZON.NoIntent":
+            query = "no"
         if not query:
             return respond(handler_input, "No te entendí. ¿Puedes repetirlo?")
 
@@ -1787,13 +1930,20 @@ class ChatHandler(AbstractRequestHandler):
         normalized = query.lower().strip(" .!?¡¿,")
 
         pending = session.pop("pending", None)
-        if pending and normalized in YES:
+        if pending and es_si(normalized):
             pending["_confirmado"] = True
             memory = load_memory(handler_input)
             out = run_actions(handler_input, [pending], memory, deadline)
-            return respond(handler_input, compose_answer("Listo.", out))
-        if pending and normalized in NO:
-            return respond(handler_input, "Cancelado.")
+            return contestar(handler_input, query, compose_answer("Listo.", out))
+        if pending and es_no(normalized):
+            if pending.get("accion") == "whatsapp_confirmar":      # que la PC no deje el mensaje listo para mandar
+                run_pc_action({"accion": "whatsapp_cancelar", "datos": {}}, deadline)
+            return contestar(handler_input, query, "Cancelado.")
+        if pending:                      # dijo otra cosa: la confirmación se cae y seguimos con lo nuevo
+            if pending.get("accion") == "whatsapp_confirmar":
+                run_pc_action({"accion": "whatsapp_cancelar", "datos": {}}, deadline)
+        if pedido.name in ("AMAZON.YesIntent", "AMAZON.NoIntent"):
+            return respond(handler_input, "No hay nada que confirmar." if pedido.name == "AMAZON.YesIntent" else "Bueno.")
 
         if normalized in CALLS:
             return respond(handler_input, random.choice(ACKS))
@@ -1802,6 +1952,10 @@ class ChatHandler(AbstractRequestHandler):
         if _sin_tildes(normalized) in ("repeti", "repetilo", "repetimelo", "repetime", "que dijiste", "como",
                                        "no te escuche", "de nuevo lo que dijiste", "perdon que dijiste"):
             return respond(handler_input, session.get("ultima") or "Todavía no te dije nada.")
+        if _sin_tildes(normalized) in QUE_SABES and not pc_link()[0]:
+            facts = [f for f in load_memory(handler_input)["facts"] if not f.startswith("Cuando el usuario dice")]
+            return contestar(handler_input, query, ("Esto es lo que sé: " + "; ".join(facts[-10:]) + ".") if facts
+                             else "Todavía no guardé nada sobre vos.")
 
         rapido = voz_rapida(handler_input, query)
         if rapido:                       # temporizadores y recordatorios: al instante, sin IA
@@ -1809,7 +1963,7 @@ class ChatHandler(AbstractRequestHandler):
         m = re.match(r"(pone|poneme|pasame|quiero escuchar|escuchar|reproduci)\s+(la\s+)?radio\s+(.+)$",
                      _sin_tildes(query).strip(" .!?¡¿,"))
         if m:                            # "poné la radio Mitre": suena en el Echo
-            radio = buscar_radio(m.group(3)) if soporta_audio(handler_input) else None
+            radio = buscar_radio(m.group(3), deadline - 0.5) if soporta_audio(handler_input) else None
             if radio:
                 return reproducir(handler_input, None, radio)
             return contestar(handler_input, query, "No encontré esa radio para reproducir acá.")
@@ -1821,16 +1975,24 @@ class ChatHandler(AbstractRequestHandler):
         partes = [x for x in re.split(r"\s+y\s+(?:despu[eé]s\s+|luego\s+)?|\s*,\s*", query) if x.strip()]
         if len(partes) > 1:
             ordenes = [via_rapida(x) for x in partes]
-            if all(ordenes):             # todas son órdenes conocidas: sin IA, una atrás de otra
-                for accion, datos, _ in ordenes:
+            # todas son órdenes conocidas y ninguna pide confirmación: sin IA, una atrás de otra
+            if all(ordenes) and not any(o[0] == "sistema" and o[1].get("orden") in CONFIRM_ORDERS for o in ordenes):
+                dichos = []
+                for accion, datos, _dicho in ordenes:
                     tipo, texto = run_pc_action({"accion": accion, "datos": datos}, deadline)
                     if tipo == "problem":
-                        return contestar(handler_input, query, texto)
-                return contestar(handler_input, query, "Listo.")
+                        return contestar(handler_input, query, " ".join(dichos + [texto]))
+                    if tipo == "info" and texto:
+                        dichos.append(texto)
+                return contestar(handler_input, query, " ".join(dichos) or "Listo.")
 
         rapida = via_rapida(query)
         if rapida:                       # comando de siempre: directo a la PC, sin IA
             accion, datos, dicho = rapida
+            if accion == "sistema" and datos.get("orden") in CONFIRM_ORDERS:     # pide el "sí" como con la IA
+                out = run_actions(handler_input, [{"tipo": "pc", "accion": accion, "datos": datos}],
+                                  load_memory(handler_input), deadline)
+                return contestar(handler_input, query, compose_answer(dicho, out))
             tipo, texto = run_pc_action({"accion": accion, "datos": datos}, deadline)
             if tipo == "problem":
                 return contestar(handler_input, query, texto)
@@ -1875,13 +2037,14 @@ class ChatHandler(AbstractRequestHandler):
                              if str(x).startswith("Cuando el usuario dice")][-20:]
                 memory["facts"] = ([f for f in memory["facts"] if not f.startswith("Cuando el usuario dice")]
                                    + lecciones)[-MAX_FACTS:]
-                memory["atajos"] = []
         except Exception:
             pass
         finally:
             sync.shutdown(wait=False)
         out = run_actions(handler_input, actions, memory, deadline)
         answer = compose_answer(speech, out)
+        if out.get("audio") and out["info"]:   # un dato y una radio en la misma respuesta: el dato se dice igual
+            answer = " ".join(out["info"] + [f"Pongo {out['audio'][0]}."])
 
         history.append({"role": "assistant", "content": answer})
         session["ultima"] = answer
@@ -1889,7 +2052,7 @@ class ChatHandler(AbstractRequestHandler):
         memory["recent"] = (memory["recent"] + history[-2:])[-MAX_RECENT:]
         save_memory(handler_input, memory)
         if out.get("audio") and not out["problems"]:
-            return reproducir(handler_input, None, out["audio"], memory)
+            return reproducir(handler_input, answer if out["info"] else None, out["audio"], memory)
         return respond(handler_input, answer, end=out["end"], permissions=out["missing"])
 
 
@@ -1945,9 +2108,15 @@ class HelpHandler(AbstractRequestHandler):
 class StopHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
         return (is_intent_name("AMAZON.StopIntent")(handler_input)
-                or is_intent_name("AMAZON.CancelIntent")(handler_input))
+                or is_intent_name("AMAZON.CancelIntent")(handler_input)
+                or is_intent_name("AMAZON.NavigateHomeIntent")(handler_input))
 
     def handle(self, handler_input):
+        session = handler_input.attributes_manager.session_attributes
+        pending = session.pop("pending", None)
+        if pending and pending.get("accion") == "whatsapp_confirmar":   # "cancelá" a "¿lo envío?"
+            run_pc_action({"accion": "whatsapp_cancelar", "datos": {}}, time.time() + 3.0)
+            return respond(handler_input, "Cancelado.", end=True)
         if soporta_audio(handler_input):     # si suena la radio, que se calle
             handler_input.response_builder.add_directive(StopDirective())
         return respond(handler_input, "Hasta luego.", end=True)
@@ -1975,6 +2144,9 @@ class ErrorHandler(AbstractExceptionHandler):
 
     def handle(self, handler_input, exception):
         logger.exception(exception)
+        tipo = str(getattr(handler_input.request_envelope.request, "object_type", "") or "")
+        if tipo.startswith(("AudioPlayer.", "PlaybackController.")) or tipo == "SessionEndedRequest":
+            return handler_input.response_builder.response      # sin sesión no se puede hablar
         return respond(handler_input, "Lo siento, algo salió mal.")
 
 
@@ -2029,11 +2201,11 @@ class PausaHandler(AbstractRequestHandler):
                 rb.add_directive(_directiva_radio(radio))
                 return rb.set_should_end_session(True).response
             return _musica_pc(handler_input, "seguir") or respond(handler_input, "No hay nada para continuar.")
-        if actividad == "PLAYING" or not pc_link()[0]:
+        if actividad == "PLAYING":
             if soporta_audio(handler_input):
                 rb.add_directive(StopDirective())
             return rb.set_should_end_session(True).response
-        return _musica_pc(handler_input, "pausa")
+        return _musica_pc(handler_input, "pausa") or respond(handler_input, "No hay nada sonando.")
 
 
 class SiguienteHandler(AbstractRequestHandler):

@@ -197,7 +197,8 @@ class EchoFalso:
                            "AMAZON.StopIntent": L.StopHandler, "AMAZON.CancelIntent": L.StopHandler,
                            "AMAZON.FallbackIntent": L.FallbackHandler, "AMAZON.PauseIntent": L.PausaHandler,
                            "AMAZON.ResumeIntent": L.PausaHandler, "AMAZON.NextIntent": L.SiguienteHandler,
-                           "AMAZON.PreviousIntent": L.SiguienteHandler}
+                           "AMAZON.PreviousIntent": L.SiguienteHandler, "AMAZON.YesIntent": L.ChatHandler,
+                           "AMAZON.NoIntent": L.ChatHandler, "AMAZON.NavigateHomeIntent": L.StopHandler}
             manejador = manejadores[intent]()
         assert manejador.can_handle(hi), f"{type(manejador).__name__} no maneja {intent}"
         resp = manejador.handle(hi)
