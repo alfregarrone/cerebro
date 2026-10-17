@@ -120,6 +120,7 @@ pc/                     agente que corre en tu computadora (Windows)
 tests/                  suite automática (pytest): corre en CI sin red, sin AWS ni Windows; Echo falso y agente simulado
 pruebas/                baterías manuales con la IA real y Windows: skill entera, bot de Telegram, agenda, mails, música
   panel.py · panel.html · panel_escritorio.py   panel web del agente y la ventana para la otra PC
+  orbe.py               la bola en pantalla que escucha, piensa y habla cuando le hablás a Alexa
 docs/                   instalación, uso y panel
 ```
 

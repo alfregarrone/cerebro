@@ -541,11 +541,13 @@ def notify_phone(text):
         return False
 
 
-_FONDO = ThreadPoolExecutor(max_workers=2)   # envíos que no esperan respuesta (memoria a la PC)
+_FONDO = ThreadPoolExecutor(max_workers=3)   # envíos que no esperan respuesta (memoria a la PC, el orbe)
+_PENDIENTES = []                              # lo que todavía se está mandando: se espera antes de responder
 
 
 def send_to_pc_async(accion, datos):
-    """Manda una orden a la PC sin esperar respuesta: sirve para sincronizar la memoria. No bloquea el turno."""
+    """Manda una orden a la PC sin esperar respuesta (memoria, orbe). Corre en paralelo con el resto del turno;
+    flush_pc() espera lo que falte justo antes de contestar, porque Lambda congela los hilos al terminar."""
     topic, secret = pc_link()
     if not topic:
         return
@@ -556,9 +558,23 @@ def send_to_pc_async(accion, datos):
         try:
             ntfy_publish(topic, json.dumps(msg, ensure_ascii=False), timeout=2.5)
         except Exception as e:
-            logger.warning("no pude sincronizar con la PC: %s", e)
+            logger.warning("no pude mandar %s a la PC: %s", accion, e)
 
-    _FONDO.submit(mandar)
+    _PENDIENTES.append(_FONDO.submit(mandar))
+
+
+def flush_pc(timeout=1.2):
+    """Espera (poco) a que salga lo pendiente hacia la PC. Se llama antes de devolver la respuesta a Alexa."""
+    pendientes = [f for f in _PENDIENTES if not f.done()]
+    del _PENDIENTES[:]
+    if pendientes:
+        wait(pendientes, timeout=timeout)
+
+
+def hud(estado, texto=""):
+    """El orbe en la PC (pc/orbe.py): "escuchando", "pensando" con lo que dijiste, "hablando" con la respuesta."""
+    if getattr(config, "HUD", True) and pc_link()[0]:
+        send_to_pc_async("hud", {"estado": estado, "texto": str(texto or "")[:300]})
 
 
 def run_pc_action(a, deadline):
@@ -1444,7 +1460,10 @@ def reproducir(handler_input, texto, radio, memory=None):
         memory = load_memory(handler_input)
         memory["radio"] = list(radio)
         save_memory(handler_input, memory)
-    rb = handler_input.response_builder.speak(say(texto or f"Pongo {radio[0]}."))
+    texto = texto or f"Pongo {radio[0]}."
+    hud("hablando", texto)
+    flush_pc()
+    rb = handler_input.response_builder.speak(say(texto))
     rb.add_directive(_directiva_radio(radio))
     return rb.set_should_end_session(True).response
 
@@ -1880,6 +1899,8 @@ def save_memory(handler_input, memory):
 
 
 def respond(handler_input, text, end=False, permissions=None):
+    hud("oculto" if end and text == "Hasta luego." else "hablando", text)
+    flush_pc()
     rb = handler_input.response_builder.speak(say(text))
     if permissions:
         rb.set_card(AskForPermissionsConsentCard(permissions=list(dict.fromkeys(permissions))))
@@ -1895,6 +1916,7 @@ class LaunchHandler(AbstractRequestHandler):
         return is_request_type("LaunchRequest")(handler_input)
 
     def handle(self, handler_input):
+        hud("escuchando")
         return respond(handler_input, "Hola. ¿En qué te ayudo?")
 
 
@@ -1925,6 +1947,7 @@ class ChatHandler(AbstractRequestHandler):
             query = "no"
         if not query:
             return respond(handler_input, "No te entendí. ¿Puedes repetirlo?")
+        hud("pensando", query)           # el orbe en la PC muestra lo que dijiste mientras se piensa la respuesta
 
         session = handler_input.attributes_manager.session_attributes
         normalized = query.lower().strip(" .!?¡¿,")

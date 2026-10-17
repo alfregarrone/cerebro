@@ -142,3 +142,18 @@ hay un Cerebro y cómo se llama la PC.
 
 El acceso directo y la ventana usan el ícono de `pc/panel.ico` (el logo con el círculo); el mismo logo es
 el favicon del panel, así la ventana en modo aplicación lo muestra en la barra de tareas.
+
+## El orbe: Cerebro en pantalla mientras le hablás
+
+Con `pc/orbe.py` aparece en la pantalla una esfera animada cada vez que le hablás a Alexa: **escucha**
+cuando abrís Cerebro, **piensa** mientras Gemini arma la respuesta (con lo que dijiste debajo), **habla**
+con la respuesta escrita, y se esconde sola. Cuando la PC recibe una orden (anotar, luces, música, una
+tarea para Claude), también lo muestra.
+
+- Funciona en la PC del agente y en cualquier otra: escucha el mismo canal firmado que usa la skill
+  (ntfy + HMAC), así que no depende del panel ni de que el agente esté prendido.
+- Se instala con **`instalar-orbe.bat`**: queda en el Inicio de Windows y en el Escritorio con el logo.
+  En una PC sin el agente, pide una vez el enlace con la skill (`cerebro_link`).
+- La skill manda los avisos si `HUD = True` en su `config.py` (viene así); cuesta unas décimas de
+  segundo por respuesta. `python orbe.py --prueba` muestra una secuencia de ejemplo.
+- Esc o doble clic la esconde, clic derecho la cierra, y se puede arrastrar a donde quieras.

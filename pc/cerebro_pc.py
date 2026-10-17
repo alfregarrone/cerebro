@@ -51,6 +51,7 @@ log = logging.getLogger("cerebro")
 
 MAX_AGE_LIVE = 120                         # órdenes en vivo más viejas se ignoran (la PC estaba apagada)
 QUEUEABLE = {"nota", "completar_pendiente"}  # estas sí se procesan aunque lleguen tarde (ntfy guarda 12 h)
+SIN_RESPUESTA = {"hud"}                     # mensajes informativos para el orbe en pantalla: se ignoran acá
 PLAN_TTL = 24 * 3600
 CREATE_NO_WINDOW = 0x08000000
 TASK_TIMEOUT = 30 * 60
@@ -2718,6 +2719,8 @@ def procesar(evento, estado):
     del vistos[:-300]
 
     accion = msg["accion"]
+    if accion in SIN_RESPUESTA:                 # avisos para el orbe (pc/orbe.py): no son órdenes, no se contestan
+        return
     edad = time.time() - float(msg["ts"])
     if edad > MAX_AGE_LIVE and accion not in QUEUEABLE:
         log.info("orden vieja ignorada: %s (%.0fs)", accion, edad)

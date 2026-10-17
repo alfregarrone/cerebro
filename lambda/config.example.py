@@ -30,6 +30,10 @@ TIMEZONE_ID = "America/Argentina/Buenos_Aires"
 # Búsqueda en Google: con la clave gratuita de Gemini NO está disponible (da error 429).
 WEB_SEARCH = False
 
+# El orbe en la PC (pc/orbe.py): la "bola" que escucha, piensa y habla en pantalla cada vez que le hablás.
+# Manda un aviso por el enlace con la PC en cada turno (suma unas décimas de segundo a cada respuesta).
+HUD = True
+
 # Enlace privado con tu PC y tu celular, con la forma "topico:clave". Vacío = sin agente de PC.
 # Generalo con:  python -c "import secrets; print(f'cerebro-{secrets.token_hex(10)}:{secrets.token_hex(24)}')"
 # y poné el MISMO valor en el config del agente (pc/config.json).
