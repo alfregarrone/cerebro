@@ -119,6 +119,7 @@ pc/                     agente que corre en tu computadora (Windows)
   config.example.json   plantilla (enlace, Telegram, Gemini, calendario, Gmail, luces)
 tests/                  suite automática (pytest): corre en CI sin red, sin AWS ni Windows; Echo falso y agente simulado
 pruebas/                baterías manuales con la IA real y Windows: skill entera, bot de Telegram, agenda, mails, música
+  panel.py · panel.html · panel_escritorio.py   panel web del agente y la ventana para la otra PC
 docs/                   instalación, uso y panel
 ```
 

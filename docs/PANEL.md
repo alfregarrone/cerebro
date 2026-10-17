@@ -112,3 +112,30 @@ Claves en `config_pc.json` (todas opcionales):
 - **Desde el celular no entra:** falta `panel_en_red: true`, el firewall, o no están en la misma red.
 - **"Ese token no es":** el de `estado.json` cambió (por ejemplo, si borraste el archivo). Pedile el link nuevo al
   bot con `panel`.
+
+## El panel de escritorio en tu PC principal
+
+Si el agente corre en tu **segunda PC**, en la principal no hace falta instalar el agente: se instala
+solo la **ventana del panel**, con su ícono en el Escritorio y el menú Inicio. Abre el panel de la
+otra PC en una ventana propia (sin navegador a la vista) y desde ahí ves y manejás todo lo que pasa
+allá: acciones, automatizaciones, tareas de Claude, notas, memoria y el registro en vivo.
+
+1. En la **segunda PC** (la del agente), poné `"panel_en_red": true` en `config_pc.json` y reiniciá el
+   agente (`configurar.bat` lo hace). Así el panel escucha en la red de casa, no solo en esa PC.
+2. En la **PC principal**, copiá la carpeta `pc/` (o al menos `panel_escritorio.py` e
+   `instalar-panel-escritorio.bat`) y ejecutá **`instalar-panel-escritorio.bat`**. Pide la dirección de
+   la otra PC (el botón *Buscar en la red* la encuentra sola), el puerto y el token. El token lo da el
+   agente: escribile "panel" al bot de Telegram, o miralo en `estado.json` de la otra PC
+   (`"panel_token"`). *Probar* verifica la conexión antes de guardar.
+3. Listo: el acceso directo **Cerebro Panel** abre la ventana. Si está instalado `pywebview` (el
+   instalador lo intenta), es una ventana nativa; si no, usa Edge o Chrome en modo aplicación.
+
+Para cambiar la dirección o el token: `python panel_escritorio.py --configurar`. Para ver qué
+agentes hay en la red: `python panel_escritorio.py --buscar`.
+
+Las dos PCs tienen que estar en la **misma red** (la de tu casa). El panel nunca se expone a
+internet: fuera de casa, usá Telegram.
+
+La configuración queda en `panel_escritorio.json` junto al programa y lleva el token: tratala
+como una contraseña. `/api/ping` es lo único que el panel contesta sin token, y solo dice que ahí
+hay un Cerebro y cómo se llama la PC.

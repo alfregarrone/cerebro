@@ -1031,6 +1031,9 @@ class Manejador(BaseHTTPRequestHandler):
             camino = partes.path
             if camino == "/" and metodo == "GET":
                 return self._pagina(consulta)
+            if camino == "/api/ping" and metodo == "GET":     # sin token: solo dice "acá hay un Cerebro" (lo usa el
+                return self._json({"cerebro": True, "equipo": platform.node(),   # panel de escritorio para encontrarlo)
+                                   "version": str(getattr(A, "VERSION", "")), "en_red": bool(_PANEL["en_red"])})
             if camino.startswith("/api/"):
                 return self._api(metodo, camino[5:].rstrip("/"), consulta)
             self._json({"ok": False, "error": "No existe."}, 404)

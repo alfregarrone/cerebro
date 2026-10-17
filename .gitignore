@@ -12,6 +12,8 @@ pc/programados.json
 pc/casa_apodos.json
 pc/capturas/
 pc/audios/
+pc/panel_escritorio.json
+pc/ventana_panel/
 pruebas/_copia_*/
 .env
 *.pem

@@ -18,6 +18,7 @@ datos en vivo). Con él, Cerebro tiene manos.
 | `cerebro_pc.py` | El agente. Escucha ntfy.sh y Telegram, valida la firma de cada orden y la ejecuta. Corre sin ventana con `pythonw`. |
 | `panel.py` / `panel.html` | El [panel web local](../docs/PANEL.md): todas las acciones con formulario, consola, automatizaciones, notas, tareas, casa, memoria y registro. Lo arranca el agente; solo biblioteca estándar. |
 | `abrir-panel.bat` | Abre el panel en el navegador con el token puesto. |
+| `panel_escritorio.py` / `instalar-panel-escritorio.bat` | Para tu **PC principal** cuando el agente corre en otra: instala la ventana "Cerebro Panel" que abre el panel de la otra PC (la encuentra en la red y guarda el token). |
 | `config.example.json` | Plantilla de configuración. Copiala a `config_pc.json` (ese archivo nunca va al repo). |
 | `instalar.bat` | Crea el acceso directo de inicio de Windows y arranca el agente. |
 | `instalar-extras.bat` | Instala las dependencias opcionales: pantalla y WhatsApp, luces y enchufes, agenda. |
