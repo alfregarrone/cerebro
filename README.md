@@ -91,7 +91,7 @@ quedan en cola y se procesan al encenderse.
 
 ## Instalar
 
-La guía completa está en **[docs/INSTALACION.md](docs/INSTALACION.md)**. En resumen:
+La guía completa está en **[docs/INSTALACION.md](docs/INSTALACION.md)**. Si querés que Claude Code lo instale por vos en la PC, dale **[docs/INSTALAR-CON-CLAUDE.md](docs/INSTALAR-CON-CLAUDE.md)**. En resumen:
 
 1. Creá una skill Alexa-hosted (Python) en la [consola de Alexa](https://developer.amazon.com/alexa/console/ask).
 2. Pegá el modelo de interacción de `skill-package/`, y el código de `lambda/`.
