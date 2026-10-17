@@ -20,6 +20,14 @@ def escritorio(pc, tmp_path, monkeypatch):
     return pe
 
 
+def test_el_icono_del_panel_es_un_ico_valido():
+    from pathlib import Path
+    ico = Path(__file__).resolve().parent.parent / "pc" / "panel.ico"
+    assert ico.read_bytes()[:4] == b"\x00\x00\x01\x00"          # cabecera de un .ico de Windows
+    html = (ico.parent / "panel.html").read_text(encoding="utf-8")
+    assert 'rel="icon" type="image/png" href="data:image/png;base64,' in html
+
+
 def test_config_va_y_vuelve(escritorio):
     assert escritorio.cargar() == {"host": "", "puerto": 8765, "token": ""}
     escritorio.guardar({"host": "192.168.0.20", "puerto": 8766, "token": "abc def"})

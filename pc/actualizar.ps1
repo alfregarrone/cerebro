@@ -26,7 +26,7 @@ if ($mismo) {
   Write-Host 'Ya estas en la carpeta de Cerebro: no hace falta copiar.'
 } else {
   $protegidos = @('config_pc.json', 'gemini_key.txt', 'estado.json', 'latido.txt', 'panel_escritorio.json')
-  $archivos = @(Get-ChildItem $origen -File | Where-Object { ($protegidos -notcontains $_.Name) -and (@('.py', '.bat', '.ps1', '.txt', '.html') -contains $_.Extension) })
+  $archivos = @(Get-ChildItem $origen -File | Where-Object { ($protegidos -notcontains $_.Name) -and (@('.py', '.bat', '.ps1', '.txt', '.html', '.ico', '.png') -contains $_.Extension) })
   foreach ($a in $archivos) { Copy-Item $a.FullName -Destination $Destino -Force }
   Write-Host "Copie $($archivos.Count) archivos nuevos."
 }

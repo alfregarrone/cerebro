@@ -139,3 +139,6 @@ internet: fuera de casa, usá Telegram.
 La configuración queda en `panel_escritorio.json` junto al programa y lleva el token: tratala
 como una contraseña. `/api/ping` es lo único que el panel contesta sin token, y solo dice que ahí
 hay un Cerebro y cómo se llama la PC.
+
+El acceso directo y la ventana usan el ícono de `pc/panel.ico` (el logo con el círculo); el mismo logo es
+el favicon del panel, así la ventana en modo aplicación lo muestra en la barra de tareas.

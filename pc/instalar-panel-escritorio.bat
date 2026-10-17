@@ -34,7 +34,7 @@ if errorlevel 1 (
 )
 
 echo Creando los accesos directos "Cerebro Panel" (Escritorio y menu Inicio)...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; foreach ($carpeta in @([Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('Programs'))) { $lnk = $ws.CreateShortcut((Join-Path $carpeta 'Cerebro Panel.lnk')); $lnk.TargetPath = (Get-Command pythonw.exe).Source; $lnk.Arguments = '\"' + (Join-Path $PWD 'panel_escritorio.py') + '\"'; $lnk.WorkingDirectory = $PWD.Path; $lnk.Description = 'Cerebro: panel del agente de la otra PC'; $lnk.Save() }"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; foreach ($carpeta in @([Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('Programs'))) { $lnk = $ws.CreateShortcut((Join-Path $carpeta 'Cerebro Panel.lnk')); $lnk.TargetPath = (Get-Command pythonw.exe).Source; $lnk.Arguments = '\"' + (Join-Path $PWD 'panel_escritorio.py') + '\"'; $lnk.WorkingDirectory = $PWD.Path; $lnk.Description = 'Cerebro: panel del agente de la otra PC'; if (Test-Path (Join-Path $PWD 'panel.ico')) { $lnk.IconLocation = (Join-Path $PWD 'panel.ico') + ',0' }; $lnk.Save() }"
 if errorlevel 1 (
   echo [ERROR] No pude crear los accesos directos.
   pause
