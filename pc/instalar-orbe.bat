@@ -21,7 +21,7 @@ if errorlevel 1 (
 )
 
 if not exist "config_pc.json" (
-  echo Esta PC no tiene el agente: hace falta el enlace con la skill (cerebro_link).
+  echo Esta PC no tiene el agente: hace falta el enlace con la skill ^(cerebro_link^).
   python orbe.py --configurar
   if errorlevel 1 (
     pause

@@ -772,19 +772,37 @@ def api_compras(cuerpo, consulta):
 
 # --- tareas (Claude Code) ---
 
+_TITULOS = {}      # nombre -> (mtime, bytes, título): el panel pide la lista cada 5 s y no hace falta releer todo
+
+
+def _titulo_informe(entrada, mtime, tam):
+    guardado = _TITULOS.get(entrada.name)
+    if guardado and guardado[0] == mtime and guardado[1] == tam:
+        return guardado[2]
+    try:
+        with open(entrada.path, encoding="utf-8", errors="replace") as f:
+            titulo = f.readline().lstrip("# ").strip()
+    except OSError:
+        titulo = ""
+    _TITULOS[entrada.name] = (mtime, tam, titulo)
+    return titulo
+
+
 def _informes(maximo=60):
     carpeta = A.VAULT / "Tareas"
-    if not carpeta.is_dir():
+    try:
+        entradas = [(e, e.stat()) for e in os.scandir(carpeta) if e.name.endswith(".md") and e.is_file()]
+    except OSError:
         return []
-    archivos = sorted((f for f in carpeta.glob("*.md") if f.is_file()), key=lambda f: f.stat().st_mtime, reverse=True)
+    entradas.sort(key=lambda par: par[1].st_mtime, reverse=True)
     salida = []
-    for f in archivos[:maximo]:
-        try:
-            titulo = f.read_text(encoding="utf-8", errors="replace").splitlines()[0].lstrip("# ").strip()
-        except (OSError, IndexError):
-            titulo = ""
-        salida.append({"nombre": f.name, "titulo": titulo or f.stem, "bytes": f.stat().st_size,
-                       "fecha": datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M")})
+    for e, st in entradas[:maximo]:
+        titulo = _titulo_informe(e, st.st_mtime, st.st_size)
+        salida.append({"nombre": e.name, "titulo": titulo or Path(e.name).stem, "bytes": st.st_size,
+                       "fecha": datetime.fromtimestamp(st.st_mtime).strftime("%Y-%m-%d %H:%M")})
+    vigentes = {e.name for e, _ in entradas}
+    for nombre in [n for n in _TITULOS if n not in vigentes]:
+        _TITULOS.pop(nombre, None)
     return salida
 
 

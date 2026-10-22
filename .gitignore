@@ -30,3 +30,8 @@ venv/
 .DS_Store
 Thumbs.db
 *.log
+
+# Impeccable: archivos de trabajo (bocetos, capturas de revisión, estado de la página de decisión)
+.impeccable/mocks/
+.impeccable/review/
+.impeccable/questions/

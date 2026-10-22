@@ -339,6 +339,18 @@ def test_tareas_archivo_solo_dentro_de_la_carpeta(panel, pc):
     assert r["activas"] == [] and r["plan"] is None
 
 
+def test_los_informes_se_releen_si_cambian_y_desaparecen_si_se_borran(panel, pc):
+    carpeta = pc.VAULT / "Tareas"
+    carpeta.mkdir(parents=True, exist_ok=True)
+    informe = carpeta / "2026-02-02_informe.md"
+    informe.write_text("", encoding="utf-8")                  # Claude crea el archivo y después lo escribe
+    assert panel.get("/api/tareas")[1]["informes"][0]["titulo"] == "2026-02-02_informe"
+    informe.write_text("# Consulta: el título de verdad\n\nlisto\n", encoding="utf-8")
+    assert panel.get("/api/tareas")[1]["informes"][0]["titulo"] == "Consulta: el título de verdad"
+    informe.unlink()
+    assert all(i["nombre"] != informe.name for i in panel.get("/api/tareas")[1]["informes"])
+
+
 def test_plan_pendiente_aprobar_y_descartar(panel, pc, monkeypatch):
     monkeypatch.setattr(pc, "_buscar_claude", lambda: "")
     estado, r = panel.post("/api/tareas", {"instruccion": "ordená descargas", "modo": "cambios"})
@@ -413,6 +425,34 @@ def test_la_pagina_se_lee_del_disco_en_cada_pedido(panel):
     finally:
         pagina.write_text(original, encoding="utf-8")
     assert "RETOCADO" not in panel.pedir("/", auth="cookie")[1].decode("utf-8")
+
+
+def _script_de_la_pagina():
+    from pathlib import Path
+    html = (Path(__file__).resolve().parent.parent / "pc" / "panel.html").read_text(encoding="utf-8")
+    return html[html.index("<script>") + len("<script>"):html.rindex("</script>")]
+
+
+def test_el_javascript_de_la_pagina_no_tiene_errores_de_sintaxis(tmp_path):
+    import shutil
+    import subprocess
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("sin Node no se puede revisar la sintaxis")
+    archivo = tmp_path / "panel.js"
+    archivo.write_text(_script_de_la_pagina(), encoding="utf-8")
+    r = subprocess.run([node, "--check", str(archivo)], capture_output=True, text=True, timeout=60)
+    assert r.returncode == 0, r.stderr
+
+
+def test_todo_lo_que_pide_la_pagina_existe_en_la_api(panel):
+    import re
+    rutas = [patron for _, patron, _ in panel.modulo.RUTAS]
+    pedidos = set(re.findall(r'api\("([a-z_/]+)', _script_de_la_pagina()))
+    assert {"estado", "acciones", "ejecutar", "orden", "notas", "tareas", "casa", "memoria"} <= pedidos
+    for pedido in sorted(pedidos):          # "programados/" + id (+ "/ejecutar") se completa con un id de ejemplo
+        candidatos = [pedido + "abc123", pedido + "abc123/ejecutar"] if pedido.endswith("/") else [pedido]
+        assert any(p.fullmatch(c) for p in rutas for c in candidatos), pedido
 
 
 def test_panel_desactivado_en_config(pc, monkeypatch):

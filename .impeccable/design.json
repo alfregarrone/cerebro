@@ -1,0 +1,889 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-22T01:20:03+00:00",
+  "title": "Design System: Cerebro",
+  "extensions": {
+    "colorMeta": {
+      "suelo": {
+        "role": "neutral",
+        "displayName": "Suelo",
+        "canonical": "#ffffff",
+        "cssVar": "--suelo",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "chapa": {
+        "role": "neutral",
+        "displayName": "Chapa esmaltada",
+        "canonical": "#ffffff",
+        "cssVar": "--chapa",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "tenue": {
+        "role": "neutral",
+        "displayName": "Tenue",
+        "canonical": "#f2f2f0",
+        "cssVar": "--tenue",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#252524",
+          "#424240",
+          "#616160",
+          "#828281",
+          "#a5a5a3",
+          "#c9c9c7",
+          "#eeeeec"
+        ]
+      },
+      "tinta": {
+        "role": "primary",
+        "displayName": "Tinta de cartel",
+        "canonical": "#161616",
+        "cssVar": "--tinta",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "tinta-2": {
+        "role": "neutral",
+        "displayName": "Gris de rótulo",
+        "canonical": "#55575c",
+        "cssVar": "--tinta-2",
+        "tonalRamp": [
+          "#0a0b0f",
+          "#232529",
+          "#404247",
+          "#5f6166",
+          "#808288",
+          "#a3a5aa",
+          "#c7c9cf",
+          "#eceef4"
+        ]
+      },
+      "filete": {
+        "role": "neutral",
+        "displayName": "Filete fino",
+        "canonical": "#dcdcda",
+        "cssVar": "--filete",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#252524",
+          "#424240",
+          "#616160",
+          "#828281",
+          "#a5a5a3",
+          "#c9c9c7",
+          "#eeeeec"
+        ]
+      },
+      "filete-2": {
+        "role": "neutral",
+        "displayName": "Filete de control",
+        "canonical": "#c4c5c3",
+        "cssVar": "--filete-2",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#252524",
+          "#414241",
+          "#616160",
+          "#828381",
+          "#a4a5a3",
+          "#c8c9c7",
+          "#eeefed"
+        ]
+      },
+      "banda": {
+        "role": "primary",
+        "displayName": "Banda de andén",
+        "canonical": "#121212",
+        "cssVar": "--banda",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "banda-tinta": {
+        "role": "neutral",
+        "displayName": "Tinta de banda",
+        "canonical": "#ffffff",
+        "cssVar": "--banda-tinta",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "banda-2": {
+        "role": "neutral",
+        "displayName": "Gris de banda",
+        "canonical": "#b9babd",
+        "cssVar": "--banda-2",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#242527",
+          "#414244",
+          "#606164",
+          "#818285",
+          "#a4a5a8",
+          "#c8c9cc",
+          "#edeef1"
+        ]
+      },
+      "linea-a": {
+        "role": "secondary",
+        "displayName": "Celeste Línea A",
+        "canonical": "#00aeef",
+        "cssVar": "--A",
+        "tonalRamp": [
+          "#000d16",
+          "#01293c",
+          "#014865",
+          "#036a93",
+          "#048dc2",
+          "#12b2f4",
+          "#89d4fe",
+          "#def2fe"
+        ]
+      },
+      "linea-b": {
+        "role": "secondary",
+        "displayName": "Rojo Línea B",
+        "canonical": "#e30613",
+        "cssVar": "--B",
+        "tonalRamp": [
+          "#1f0000",
+          "#4d0002",
+          "#800106",
+          "#b8030d",
+          "#ee2121",
+          "#fe7466",
+          "#feb3a9",
+          "#fee9e6"
+        ]
+      },
+      "linea-c": {
+        "role": "secondary",
+        "displayName": "Azul Línea C",
+        "canonical": "#0067b1",
+        "cssVar": "--C",
+        "tonalRamp": [
+          "#000c1c",
+          "#002647",
+          "#014477",
+          "#0164ab",
+          "#3286d3",
+          "#58aaf9",
+          "#a0cefe",
+          "#e3f0fe"
+        ]
+      },
+      "linea-d": {
+        "role": "secondary",
+        "displayName": "Verde Línea D",
+        "canonical": "#00a650",
+        "cssVar": "--D",
+        "tonalRamp": [
+          "#001003",
+          "#002e12",
+          "#025024",
+          "#057537",
+          "#039c4b",
+          "#3ac26a",
+          "#66e88e",
+          "#c8ffd3"
+        ]
+      },
+      "linea-e": {
+        "role": "secondary",
+        "displayName": "Violeta Línea E",
+        "canonical": "#6f2c91",
+        "cssVar": "--E",
+        "tonalRamp": [
+          "#150021",
+          "#3a0051",
+          "#5e187f",
+          "#803ea3",
+          "#a360c8",
+          "#c784ee",
+          "#e2b4fe",
+          "#f6e9fe"
+        ]
+      },
+      "linea-h": {
+        "role": "secondary",
+        "displayName": "Amarillo Línea H",
+        "canonical": "#ffd100",
+        "cssVar": "--H",
+        "tonalRamp": [
+          "#100b00",
+          "#2e2401",
+          "#504001",
+          "#755f05",
+          "#9c7f05",
+          "#c5a103",
+          "#f0c500",
+          "#ffeeb8"
+        ]
+      },
+      "linea-p": {
+        "role": "secondary",
+        "displayName": "Gris Premetro",
+        "canonical": "#6b6d72",
+        "cssVar": "--P",
+        "tonalRamp": [
+          "#0a0b0f",
+          "#232529",
+          "#404246",
+          "#5f6166",
+          "#808287",
+          "#a3a5aa",
+          "#c7c9cf",
+          "#eceef4"
+        ]
+      },
+      "ok": {
+        "role": "tertiary",
+        "displayName": "Servicio normal",
+        "canonical": "#0b7f3b",
+        "cssVar": "--ok",
+        "tonalRamp": [
+          "#001003",
+          "#012e11",
+          "#005022",
+          "#047535",
+          "#349953",
+          "#5bbd75",
+          "#81e398",
+          "#c8ffd2"
+        ]
+      },
+      "demora": {
+        "role": "tertiary",
+        "displayName": "Demora",
+        "canonical": "#925400",
+        "cssVar": "--demora",
+        "tonalRamp": [
+          "#150700",
+          "#391e01",
+          "#613601",
+          "#8c5102",
+          "#b2722e",
+          "#d89453",
+          "#feb977",
+          "#feebda"
+        ]
+      },
+      "corte": {
+        "role": "tertiary",
+        "displayName": "Corte",
+        "canonical": "#c8102e",
+        "cssVar": "--corte",
+        "tonalRamp": [
+          "#1f0002",
+          "#4c010a",
+          "#800218",
+          "#b70327",
+          "#e43845",
+          "#fe7272",
+          "#feb2af",
+          "#fee9e7"
+        ]
+      },
+      "apagado": {
+        "role": "tertiary",
+        "displayName": "Apagado",
+        "canonical": "#6b6d72",
+        "cssVar": "--apagado",
+        "tonalRamp": [
+          "#0a0b0f",
+          "#232529",
+          "#404246",
+          "#5f6166",
+          "#808287",
+          "#a3a5aa",
+          "#c7c9cf",
+          "#eceef4"
+        ]
+      },
+      "ok-fondo": {
+        "role": "tertiary",
+        "displayName": "Fondo normal",
+        "canonical": "#e5f4ea",
+        "cssVar": "--ok-fondo",
+        "tonalRamp": [
+          "#050e08",
+          "#1d2821",
+          "#39453e",
+          "#58655c",
+          "#79867d",
+          "#9ba9a0",
+          "#bfcdc4",
+          "#e4f3e9"
+        ]
+      },
+      "demora-fondo": {
+        "role": "tertiary",
+        "displayName": "Fondo demora",
+        "canonical": "#fbf0dc",
+        "cssVar": "--demora-fondo",
+        "tonalRamp": [
+          "#110a01",
+          "#2c2414",
+          "#4a4130",
+          "#69604f",
+          "#8b816f",
+          "#aea491",
+          "#d2c8b4",
+          "#f8edd9"
+        ]
+      },
+      "corte-fondo": {
+        "role": "tertiary",
+        "displayName": "Fondo corte",
+        "canonical": "#fbe5e8",
+        "cssVar": "--corte-fondo",
+        "tonalRamp": [
+          "#140709",
+          "#302023",
+          "#4e3d3f",
+          "#6e5c5e",
+          "#907d7f",
+          "#b49fa2",
+          "#d8c3c6",
+          "#fee8eb"
+        ]
+      },
+      "foco": {
+        "role": "neutral",
+        "displayName": "Foco",
+        "canonical": "#0067b1",
+        "cssVar": "--foco",
+        "tonalRamp": [
+          "#000c1c",
+          "#002647",
+          "#014477",
+          "#0164ab",
+          "#3286d3",
+          "#58aaf9",
+          "#a0cefe",
+          "#e3f0fe"
+        ]
+      },
+      "suelo-oscuro": {
+        "role": "neutral",
+        "displayName": "Suelo (oscuro)",
+        "canonical": "#0f1011",
+        "cssVar": "--suelo",
+        "tonalRamp": [
+          "#0a0b0c",
+          "#242526",
+          "#414243",
+          "#606163",
+          "#818284",
+          "#a4a5a7",
+          "#c8c9cb",
+          "#edeff0"
+        ]
+      },
+      "chapa-oscuro": {
+        "role": "neutral",
+        "displayName": "Chapa esmaltada (oscuro)",
+        "canonical": "#191a1c",
+        "cssVar": "--chapa",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#242527",
+          "#414244",
+          "#606164",
+          "#818285",
+          "#a4a5a8",
+          "#c8c9cc",
+          "#edeef1"
+        ]
+      },
+      "tenue-oscuro": {
+        "role": "neutral",
+        "displayName": "Tenue (oscuro)",
+        "canonical": "#1d1e21",
+        "cssVar": "--tenue",
+        "tonalRamp": [
+          "#0a0b0e",
+          "#242528",
+          "#414245",
+          "#606165",
+          "#818286",
+          "#a3a5a9",
+          "#c8c9cd",
+          "#edeef3"
+        ]
+      },
+      "tinta-oscuro": {
+        "role": "primary",
+        "displayName": "Tinta de cartel (oscuro)",
+        "canonical": "#ececea",
+        "cssVar": "--tinta",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#252524",
+          "#424240",
+          "#616160",
+          "#828281",
+          "#a5a5a3",
+          "#c9c9c7",
+          "#eeeeec"
+        ]
+      },
+      "tinta-2-oscuro": {
+        "role": "neutral",
+        "displayName": "Gris de rótulo (oscuro)",
+        "canonical": "#a4a6ab",
+        "cssVar": "--tinta-2",
+        "tonalRamp": [
+          "#0a0b0e",
+          "#232529",
+          "#404246",
+          "#5f6166",
+          "#808287",
+          "#a3a5aa",
+          "#c7c9ce",
+          "#eceef4"
+        ]
+      },
+      "filete-oscuro": {
+        "role": "neutral",
+        "displayName": "Filete fino (oscuro)",
+        "canonical": "#2b2c30",
+        "cssVar": "--filete",
+        "tonalRamp": [
+          "#0a0b0e",
+          "#242529",
+          "#414246",
+          "#606165",
+          "#818287",
+          "#a3a5aa",
+          "#c7c9ce",
+          "#edeef4"
+        ]
+      },
+      "filete-2-oscuro": {
+        "role": "neutral",
+        "displayName": "Filete de control (oscuro)",
+        "canonical": "#3a3b40",
+        "cssVar": "--filete-2",
+        "tonalRamp": [
+          "#0a0b0f",
+          "#242529",
+          "#414247",
+          "#606166",
+          "#818288",
+          "#a3a5ab",
+          "#c7c9cf",
+          "#edeef4"
+        ]
+      },
+      "ok-oscuro": {
+        "role": "tertiary",
+        "displayName": "Servicio normal (oscuro)",
+        "canonical": "#45cf80",
+        "cssVar": "--ok",
+        "tonalRamp": [
+          "#001005",
+          "#002e15",
+          "#02502a",
+          "#057540",
+          "#029c56",
+          "#33c274",
+          "#62e897",
+          "#c6ffd7"
+        ]
+      },
+      "demora-oscuro": {
+        "role": "tertiary",
+        "displayName": "Demora (oscuro)",
+        "canonical": "#f2b347",
+        "cssVar": "--demora",
+        "tonalRamp": [
+          "#120900",
+          "#342100",
+          "#583c03",
+          "#815804",
+          "#ab7706",
+          "#d59823",
+          "#fcbc52",
+          "#feecd0"
+        ]
+      },
+      "corte-oscuro": {
+        "role": "tertiary",
+        "displayName": "Corte (oscuro)",
+        "canonical": "#ff6b70",
+        "cssVar": "--corte",
+        "tonalRamp": [
+          "#1f0002",
+          "#4d000c",
+          "#7f021c",
+          "#b11d31",
+          "#d94851",
+          "#ff7175",
+          "#feb2b0",
+          "#ffe8e7"
+        ]
+      },
+      "apagado-oscuro": {
+        "role": "tertiary",
+        "displayName": "Apagado (oscuro)",
+        "canonical": "#8d9096",
+        "cssVar": "--apagado",
+        "tonalRamp": [
+          "#090b0f",
+          "#23252a",
+          "#3f4247",
+          "#5e6167",
+          "#7f8288",
+          "#a2a5ab",
+          "#c6c9d0",
+          "#ebeef5"
+        ]
+      },
+      "ok-fondo-oscuro": {
+        "role": "tertiary",
+        "displayName": "Fondo normal (oscuro)",
+        "canonical": "#12301f",
+        "cssVar": "--ok-fondo",
+        "tonalRamp": [
+          "#000f05",
+          "#0e2c1b",
+          "#2c4a37",
+          "#4b6a56",
+          "#6b8b77",
+          "#8daf99",
+          "#b1d3bd",
+          "#d5f9e1"
+        ]
+      },
+      "demora-fondo-oscuro": {
+        "role": "tertiary",
+        "displayName": "Fondo demora (oscuro)",
+        "canonical": "#33270f",
+        "cssVar": "--demora-fondo",
+        "tonalRamp": [
+          "#120a00",
+          "#2f230b",
+          "#4d4028",
+          "#6d5f46",
+          "#8f8066",
+          "#b2a388",
+          "#d7c7ab",
+          "#fcedd0"
+        ]
+      },
+      "corte-fondo-oscuro": {
+        "role": "tertiary",
+        "displayName": "Fondo corte (oscuro)",
+        "canonical": "#3a1519",
+        "cssVar": "--corte-fondo",
+        "tonalRamp": [
+          "#1e0004",
+          "#3d171b",
+          "#5d3537",
+          "#7f5356",
+          "#a37477",
+          "#c79799",
+          "#edbabc",
+          "#ffe8e9"
+        ]
+      },
+      "foco-oscuro": {
+        "role": "neutral",
+        "displayName": "Foco (oscuro)",
+        "canonical": "#5cb8ff",
+        "cssVar": "--foco",
+        "tonalRamp": [
+          "#000c19",
+          "#002742",
+          "#01466f",
+          "#0466a0",
+          "#2789cd",
+          "#50adf3",
+          "#98d0fe",
+          "#e1f1ff"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Marca",
+        "purpose": "La palabra Cerebro en la banda. Única aparición."
+      },
+      "headline": {
+        "displayName": "Rótulo de cartel",
+        "purpose": "Rótulo de cada bloque y cabecera de diálogo."
+      },
+      "title": {
+        "displayName": "Nombre de estación o servicio",
+        "purpose": "Estaciones (15px), servicios del tablero y nombres de acción (15.5px)."
+      },
+      "hora": {
+        "displayName": "Hora fija",
+        "purpose": "Horas de la columna de próximos horarios; cifras tabulares."
+      },
+      "body": {
+        "displayName": "Lectura",
+        "purpose": "Texto corrido, formularios, mensajes."
+      },
+      "label": {
+        "displayName": "Rótulo de campo",
+        "purpose": "Encima de cada campo de formulario."
+      },
+      "etiqueta": {
+        "displayName": "Etiqueta",
+        "purpose": "Etiquetas en cápsula y contadores (12px)."
+      },
+      "mono": {
+        "displayName": "Registro",
+        "purpose": "Registro, log y bloques preformateados."
+      }
+    },
+    "shadows": [
+      {
+        "name": "flotante",
+        "value": "0 10px 30px rgba(0,0,0,.18)",
+        "purpose": "Solo el aviso de resultado flotante."
+      },
+      {
+        "name": "velo-dialogo",
+        "value": "rgba(10,10,10,.5)",
+        "purpose": "Fondo detrás del diálogo modal (::backdrop)."
+      },
+      {
+        "name": "anillo-vacio",
+        "value": "inset 0 0 0 2.5px var(--c)",
+        "purpose": "Trazo del círculo vacío (Registro); 2px para servicio apagado. Es trazo, no elevación."
+      },
+      {
+        "name": "foco",
+        "value": "outline: 2px solid var(--foco); outline-offset: 2px",
+        "purpose": "Foco visible de todo control."
+      }
+    ],
+    "motion": [
+      {
+        "name": "cambio",
+        "value": "1.6s cubic-bezier(.16,1,.3,1)",
+        "purpose": "Fogonazo único de una fila del tablero al cambiar de estado: fondo del color de la fila al 30% que se apaga."
+      },
+      {
+        "name": "aparecer-flotante",
+        "value": "transform .22s cubic-bezier(.16,1,.3,1), opacity .22s ease-out",
+        "purpose": "Entrada y salida del aviso de resultado (16px de desplazamiento)."
+      },
+      {
+        "name": "estado-control",
+        "value": ".2s ease-out",
+        "purpose": "Pista y perilla del interruptor."
+      },
+      {
+        "name": "desplegar",
+        "value": "transform .18s ease-out",
+        "purpose": "Giro de 90 grados de la flecha al abrir una acción."
+      },
+      {
+        "name": "girar",
+        "value": "1s linear infinite",
+        "purpose": "Ícono girando dentro de un botón ocupado."
+      },
+      {
+        "name": "reduccion",
+        "value": "prefers-reduced-motion: reduce",
+        "purpose": "Apaga toda transición y animación."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "una-columna",
+        "value": "980px"
+      },
+      {
+        "name": "celular",
+        "value": "640px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Cápsula plana por defecto para cualquier acción.",
+      "html": "<button class=\"ds-btn\"><svg class=\"ds-i\" viewBox=\"0 0 24 24\"><path d=\"M4.5 12h14M13 6.5l5.5 5.5-5.5 5.5\"/></svg>Ver todas</button>",
+      "css": ".ds-i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; } .ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 6px 14px; border: 1px solid var(--filete-2, #c4c5c3); border-radius: 999px; background: var(--chapa, #fff); color: var(--tinta, #161616); font: 600 14px/1.2 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif; cursor: pointer; } .ds-btn:hover { border-color: var(--tinta, #161616); } .ds-btn:focus-visible { outline: 2px solid var(--foco, #0067b1); outline-offset: 2px; } "
+    },
+    {
+      "name": "Botón primario",
+      "kind": "button",
+      "refersTo": "button-primario",
+      "description": "La acción principal de un formulario o de la consola: cápsula de tinta.",
+      "html": "<button class=\"ds-btn ds-btn-primario\">Mandar</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 6px 14px; border: 1px solid var(--filete-2, #c4c5c3); border-radius: 999px; background: var(--chapa, #fff); color: var(--tinta, #161616); font: 600 14px/1.2 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif; cursor: pointer; } .ds-btn:hover { border-color: var(--tinta, #161616); } .ds-btn:focus-visible { outline: 2px solid var(--foco, #0067b1); outline-offset: 2px; } .ds-btn-primario { background: var(--tinta, #161616); color: var(--chapa, #fff); border-color: var(--tinta, #161616); } .ds-btn-primario:hover { background: color-mix(in srgb, var(--tinta, #161616) 86%, #00aeef); } "
+    },
+    {
+      "name": "Botón peligro",
+      "kind": "button",
+      "refersTo": "button-peligro",
+      "description": "Acciones que borran o cortan algo; piden confirmación.",
+      "html": "<button class=\"ds-btn ds-btn-peligro\">Borrar</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 6px 14px; border: 1px solid var(--filete-2, #c4c5c3); border-radius: 999px; background: var(--chapa, #fff); color: var(--tinta, #161616); font: 600 14px/1.2 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif; cursor: pointer; } .ds-btn:hover { border-color: var(--tinta, #161616); } .ds-btn:focus-visible { outline: 2px solid var(--foco, #0067b1); outline-offset: 2px; } .ds-btn-peligro { color: var(--corte, #c8102e); border-color: color-mix(in srgb, var(--corte, #c8102e) 55%, transparent); }"
+    },
+    {
+      "name": "Campo",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo de formulario de esquina chica con rótulo encima.",
+      "html": "<label class=\"ds-campo\"><span>Hora</span><input class=\"ds-input\" placeholder=\"08:00\"></label>",
+      "css": ".ds-campo { display: block; } .ds-campo > span { display: block; margin-bottom: 4px; font: 600 13px 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif; color: var(--tinta-2, #55575c); } .ds-input { width: 100%; min-height: 38px; padding: 7px 11px; border: 1px solid var(--filete-2, #c4c5c3); border-radius: 6px; background: var(--chapa, #fff); color: var(--tinta, #161616); font: 15px 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif; } .ds-input:hover { border-color: var(--tinta-2, #55575c); } .ds-input:focus-visible { outline: 2px solid var(--foco, #0067b1); outline-offset: 2px; }"
+    },
+    {
+      "name": "Estaciones",
+      "kind": "nav",
+      "refersTo": "estacion",
+      "description": "Pestañas como estaciones: círculo de línea y subrayado de 4px del color de la línea en la activa.",
+      "html": "<nav class=\"ds-estaciones\"><button class=\"ds-estacion\" aria-selected=\"true\" style=\"--c:#00aeef\"><span class=\"ds-circulo\"><svg class=\"ds-i\" viewBox=\"0 0 24 24\"><path d=\"M3.5 11 12 4l8.5 7\"/><path d=\"M5.5 9.5V20h4.5v-5.5h4V20h4.5V9.5\"/></svg></span>Inicio</button><button class=\"ds-estacion\" style=\"--c:#e30613\"><span class=\"ds-circulo\"><svg class=\"ds-i\" viewBox=\"0 0 24 24\"><path d=\"M13 2.5 5 13.5h6l-1 8 8-11h-6z\"/></svg></span>Acciones</button><button class=\"ds-estacion\" style=\"--c:#0067b1\"><span class=\"ds-circulo\"><svg class=\"ds-i\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 7.5V12l3 2\"/></svg></span>Automatizaciones<span class=\"ds-cuenta\">3</span></button><button class=\"ds-estacion\" style=\"--c:#00a650\"><span class=\"ds-circulo\"><svg class=\"ds-i\" viewBox=\"0 0 24 24\"><path d=\"M6 3.5h8.5L19 8v12.5H6z\"/><path d=\"M14 3.5V8.5h5M9 12.5h7M9 16.5h5\"/></svg></span>Notas</button></nav>",
+      "css": ".ds-i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; } .ds-circulo { width: 28px; height: 28px; border-radius: 50%; background: var(--c); color: #fff; display: grid; place-items: center; flex: none; } .ds-circulo .ds-i { width: 16px; height: 16px; stroke-width: 2.1; } .ds-estaciones { display: flex; gap: 2px; background: var(--chapa, #fff); border-bottom: 1px solid var(--filete, #dcdcda); } .ds-estacion { display: inline-flex; align-items: center; gap: 9px; border: 0; border-bottom: 4px solid transparent; background: transparent; min-height: 52px; padding: 8px 12px; font: 600 15px Bahnschrift, 'DIN Alternate', 'DIN 2014', 'Segoe UI', system-ui, sans-serif; color: var(--tinta-2, #55575c); cursor: pointer; white-space: nowrap; } .ds-estacion:hover { color: var(--tinta, #161616); border-bottom-color: var(--filete-2, #c4c5c3); } .ds-estacion:focus-visible { outline: 2px solid var(--foco, #0067b1); outline-offset: 2px; } .ds-estacion[aria-selected='true'] { color: var(--tinta, #161616); border-bottom-color: var(--c); } .ds-cuenta { font: 600 12px Bahnschrift, 'DIN Alternate', 'DIN 2014', 'Segoe UI', system-ui, sans-serif; font-variant-numeric: tabular-nums; background: var(--tinta, #161616); color: var(--chapa, #fff); border-radius: 999px; padding: 1px 7px; }"
+    },
+    {
+      "name": "Etiqueta",
+      "kind": "chip",
+      "refersTo": "etiqueta",
+      "description": "Cápsula chica en DIN para marcar categoría o advertencia.",
+      "html": "<span class=\"ds-etiqueta\">diaria</span> <span class=\"ds-etiqueta ds-etiqueta-peligro\">pide confirmación</span>",
+      "css": ".ds-etiqueta { display: inline-block; font: 600 11.5px Bahnschrift, 'DIN Alternate', 'DIN 2014', 'Segoe UI', system-ui, sans-serif; border-radius: 999px; padding: 1px 8px; background: var(--tenue, #f2f2f0); color: var(--tinta-2, #55575c); border: 1px solid var(--filete, #dcdcda); } .ds-etiqueta-peligro { color: var(--corte, #c8102e); border-color: color-mix(in srgb, var(--corte, #c8102e) 40%, transparent); background: var(--corte-fondo, #fbe5e8); }"
+    },
+    {
+      "name": "Cartel",
+      "kind": "card",
+      "refersTo": "circulo",
+      "description": "Bloque como cartel: círculo de línea, rótulo DIN y filete de tinta de 2px; sin caja.",
+      "html": "<section class=\"ds-cartel\"><header><span class=\"ds-circulo\" style=\"--c:#0067b1\"><svg class=\"ds-i\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 7.5V12l3 2\"/></svg></span><h2>Próximos horarios</h2></header><div class=\"ds-cartel-cuerpo\"><span>Tomar agua</span><b class=\"ds-hora\">16:00</b></div></section>",
+      "css": ".ds-i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; } .ds-circulo { width: 28px; height: 28px; border-radius: 50%; background: var(--c); color: #fff; display: grid; place-items: center; flex: none; } .ds-circulo .ds-i { width: 16px; height: 16px; stroke-width: 2.1; } .ds-cartel header { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 2px solid var(--tinta, #161616); } .ds-cartel header .ds-circulo { width: 24px; height: 24px; } .ds-cartel header .ds-circulo .ds-i { width: 14px; height: 14px; } .ds-cartel h2 { flex: 1; margin: 0; font: 600 17px/1.2 Bahnschrift, 'DIN Alternate', 'DIN 2014', 'Segoe UI', system-ui, sans-serif; letter-spacing: .005em; color: var(--tinta, #161616); } .ds-cartel-cuerpo { padding: 14px 0 4px; display: flex; justify-content: space-between; align-items: baseline; font: 15px 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif; color: var(--tinta, #161616); } .ds-hora { font: 600 16px Bahnschrift, 'DIN Alternate', 'DIN 2014', 'Segoe UI', system-ui, sans-serif; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Estado del servicio",
+      "kind": "custom",
+      "refersTo": "circulo",
+      "description": "El tablero del andén: filas sanas en tinta; filas con problema en banda tenue, color de estado y 'desde las HH:MM'.",
+      "html": "<ul class=\"ds-tablero\"><li class=\"ds-ok\"><span class=\"ds-circulo\"><svg class=\"ds-i\" viewBox=\"0 0 24 24\"><rect x=\"5\" y=\"6\" width=\"14\" height=\"10\" rx=\"1.5\"/><path d=\"M9 20h6M12 16v4\"/></svg></span><span><b>Agente de la PC</b><small>Latido hace 3 s</small></span><span class=\"ds-servicio\">Servicio normal</span></li><li class=\"ds-demora ds-cambio\"><span class=\"ds-circulo\"><svg class=\"ds-i\" viewBox=\"0 0 24 24\"><path d=\"M20.5 4.5 3.5 11l5.8 2.1 2 6.1 3.1-3.9 4.6 3.4z\"/><path d=\"M9.3 13.1 17 7.5\"/></svg></span><span><b>Telegram</b><small>Bot del celular</small></span><span class=\"ds-servicio\">Falta vincular<small>desde las 21:40</small></span></li><li class=\"ds-corte\"><span class=\"ds-circulo\"><svg class=\"ds-i\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M3.5 12h17M12 3.5c2.4 2.3 3.5 5.2 3.5 8.5s-1.1 6.2-3.5 8.5c-2.4-2.3-3.5-5.2-3.5-8.5s1.1-6.2 3.5-8.5z\"/></svg></span><span><b>Internet</b><small>Conexión de la casa</small></span><span class=\"ds-servicio\">Interrumpido<small>desde las 21:52</small></span></li></ul>",
+      "css": ".ds-i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; } .ds-circulo { width: 28px; height: 28px; border-radius: 50%; background: var(--c); color: #fff; display: grid; place-items: center; flex: none; } .ds-circulo .ds-i { width: 16px; height: 16px; stroke-width: 2.1; } .ds-tablero { list-style: none; margin: 0; padding: 0 12px; font: 15px 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif; color: var(--tinta, #161616); } .ds-tablero li { display: grid; grid-template-columns: 34px minmax(0,1fr) auto; gap: 14px; align-items: center; padding: 11px 0; border-top: 1px solid var(--filete, #dcdcda); } .ds-tablero li:first-child { border-top: 0; } .ds-tablero .ds-circulo { width: 32px; height: 32px; } .ds-tablero .ds-circulo .ds-i { width: 17px; height: 17px; } .ds-tablero b { display: block; font: 600 15.5px/1.25 Bahnschrift, 'DIN Alternate', 'DIN 2014', 'Segoe UI', system-ui, sans-serif; } .ds-tablero small { display: block; color: var(--tinta-2, #55575c); font-size: 13px; } .ds-servicio { text-align: right; font: 600 14px/1.25 Bahnschrift, 'DIN Alternate', 'DIN 2014', 'Segoe UI', system-ui, sans-serif; white-space: nowrap; } .ds-servicio small { font: 400 12px 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif; } .ds-ok { --c: var(--tinta, #161616); } .ds-ok .ds-circulo { color: var(--chapa, #fff); } .ds-ok .ds-servicio { color: var(--tinta-2, #55575c); font-weight: 500; } .ds-tablero li:not(.ds-ok) { background: var(--tenue, #f2f2f0); margin: 0 -12px; padding: 11px 12px; border-radius: 6px; border-top-color: transparent; } .ds-demora { --c: var(--demora, #925400); } .ds-demora .ds-servicio { color: var(--demora, #925400); } .ds-corte { --c: var(--corte, #c8102e); } .ds-corte .ds-servicio { color: var(--corte, #c8102e); } @keyframes ds-cambio { from { background: color-mix(in srgb, var(--c) 30%, transparent); } } .ds-cambio { animation: ds-cambio 1.6s cubic-bezier(.16,1,.3,1); } @media (prefers-reduced-motion: reduce) { .ds-cambio { animation: none; } }"
+    },
+    {
+      "name": "Aviso que espera",
+      "kind": "custom",
+      "refersTo": "aviso-espera",
+      "description": "Cápsula ámbar tenue para lo que espera un 'sí'.",
+      "html": "<div class=\"ds-espera\"><span class=\"ds-circulo\"><svg class=\"ds-i\" viewBox=\"0 0 24 24\"><path d=\"M12 4 2.8 19.5h18.4z\"/><path d=\"M12 10v4.5M12 17h.01\"/></svg></span><p>¿Mando la captura al celular?</p><button class=\"ds-btn ds-btn-primario\">Sí</button><button class=\"ds-btn\">No</button></div>",
+      "css": ".ds-i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; } .ds-circulo { width: 28px; height: 28px; border-radius: 50%; background: var(--c); color: #fff; display: grid; place-items: center; flex: none; } .ds-circulo .ds-i { width: 16px; height: 16px; stroke-width: 2.1; } .ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 6px 14px; border: 1px solid var(--filete-2, #c4c5c3); border-radius: 999px; background: var(--chapa, #fff); color: var(--tinta, #161616); font: 600 14px/1.2 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif; cursor: pointer; } .ds-btn:hover { border-color: var(--tinta, #161616); } .ds-btn:focus-visible { outline: 2px solid var(--foco, #0067b1); outline-offset: 2px; } .ds-btn-primario { background: var(--tinta, #161616); color: var(--chapa, #fff); border-color: var(--tinta, #161616); } .ds-btn-primario:hover { background: color-mix(in srgb, var(--tinta, #161616) 86%, #00aeef); } .ds-espera { display: flex; align-items: center; gap: 14px; padding: 10px 12px 10px 10px; background: var(--demora-fondo, #fbf0dc); border-radius: 999px; font: 15px 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif; color: var(--tinta, #161616); } .ds-espera .ds-circulo { --c: var(--demora, #925400); } .ds-espera p { flex: 1; margin: 0; }"
+    },
+    {
+      "name": "Banda de andén",
+      "kind": "custom",
+      "refersTo": "banda",
+      "description": "Cabecera negra fija con marca, estado general y hora.",
+      "html": "<div class=\"ds-banda\"><span class=\"ds-marca\"><span class=\"ds-disco\"><svg class=\"ds-i\" viewBox=\"0 0 24 24\" style=\"width:17px;height:17px;stroke-width:2.2\"><path d=\"M12 3c.6 4.6 4.4 8.4 9 9-4.6.6-8.4 4.4-9 9-.6-4.6-4.4-8.4-9-9 4.6-.6 8.4-4.4 9-9z\"/></svg></span>Cerebro</span><span class=\"ds-general\"><span class=\"ds-luz\"></span><b>Todo en servicio normal</b></span><span class=\"ds-reloj\">21:58</span></div>",
+      "css": ".ds-i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; } .ds-banda { display: flex; align-items: center; gap: 16px; padding: 10px 24px; min-height: 58px; background: #121212; color: #fff; } .ds-marca { display: flex; align-items: center; gap: 10px; font: 700 21px/1 Bahnschrift, 'DIN Alternate', 'DIN 2014', 'Segoe UI', system-ui, sans-serif; letter-spacing: .01em; } .ds-disco { width: 30px; height: 30px; border-radius: 50%; background: #fff; color: #121212; display: grid; place-items: center; } .ds-general { flex: 1; display: flex; align-items: center; gap: 9px; font: 500 15px/1.3 Bahnschrift, 'DIN Alternate', 'DIN 2014', 'Segoe UI', system-ui, sans-serif; color: #b9babd; } .ds-general b { color: #fff; font-weight: 600; } .ds-luz { width: 10px; height: 10px; border-radius: 50%; background: #45cf80; } .ds-reloj { font: 600 15px Bahnschrift, 'DIN Alternate', 'DIN 2014', 'Segoe UI', system-ui, sans-serif; font-variant-numeric: tabular-nums; color: #b9babd; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Señalética del Subte",
+    "overview": "Cerebro se lee como la señalética del Subte de Buenos Aires. Cada parte del sistema es una línea con su círculo de color, cada pestaña es una estación, y el estado se informa como el tablero de \"estado del servicio\" del andén: en palabras, con la hora en que empezó el cambio. El material es chapa esmaltada blanca bajo una banda negra de andén; los colores de línea son identidad pura y nunca significan estado.\n\nLa densidad es de panel de operación, pero calmada: una sola persona, una ventana grande de escritorio, poca información por pantalla. Los bloques no son tarjetas sino carteles: un rótulo en DIN sobre un filete de tinta de 2 px, y el contenido debajo sin fondo ni borde. Lo normal se muestra en tinta y gris; el color de estado aparece solo donde algo no anda.\n\nTodo funciona sin internet: las caras son del sistema (Bahnschrift como DIN de señalética, Segoe UI para leer, Cascadia Mono para registros) y los íconos son un sprite SVG en línea dibujado a trazo.",
+    "keyCharacteristics": [
+      "Banda negra fija arriba con la marca, la frase de estado general y la hora.",
+      "Ocho estaciones con círculo lleno de color de línea e ícono blanco a trazo.",
+      "Bloques como carteles: filete de tinta de 2 px bajo el rótulo, sin chrome de tarjeta.",
+      "Cápsulas planas para todo lo que se aprieta; campos con esquina chica.",
+      "Estado en verde, ámbar o rojo, siempre con texto, solo en filas que no están sanas.",
+      "Claro (chapa blanca) y oscuro (chapa grafito) con los mismos colores de línea."
+    ],
+    "rules": [
+      {
+        "name": "The Line Is Identity Rule",
+        "body": "Los colores de línea dicen *dónde* estás, nunca *cómo* está algo. Un servicio caído es rojo de corte (#c8102e), no rojo de Línea B; un acceso rápido toma el color de la línea de su grupo.",
+        "section": "colors"
+      },
+      {
+        "name": "The Quiet Normal Rule",
+        "body": "En el tablero, lo sano va en tinta: círculo de tinta, estado en gris. Solo las filas que no están sanas ganan la banda tenue y el color de estado, y siempre con texto (\"Falta vincular\", \"Interrumpido\") además del color.",
+        "section": "colors"
+      },
+      {
+        "name": "The DIN Rotula Rule",
+        "body": "Si es un rótulo que se lee de un vistazo (nombre, hora, número, estado), va en DIN 600. Si es una frase que se lee, va en Segoe UI. Toda cifra que cambia usa cifras tabulares.",
+        "section": "typography"
+      },
+      {
+        "name": "The Offline Faces Rule",
+        "body": "Solo caras del sistema. Sin fuentes web, sin CDN: el panel tiene que andar sin internet.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sign Not Card Rule",
+        "body": "Un bloque es un cartel: rótulo en DIN sobre filete de tinta de 2px, contenido sin fondo, sin borde y sin sombra. Nada de grillas de tarjetas iguales.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Capsule Rule",
+        "body": "Si se aprieta, es cápsula. Si se escribe, es campo de 6px. No hay botones de esquina intermedia.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "**Do** asignar a cada sección nueva un color de línea por `--c` y usarlo en su círculo y en el subrayado de su estación.",
+      "**Do** rotular cada bloque como cartel: círculo de línea de 24px, rótulo DIN 600 17px, filete de tinta de 2px.",
+      "**Do** informar estado con palabra y color juntos, y marcar con \"desde las HH:MM\" cuándo empezó un cambio.",
+      "**Do** dibujar íconos nuevos en el sprite SVG en línea, a trazo de 1.8 en cuadro de 24, blancos sobre círculo lleno (tinta oscura sobre Línea H).",
+      "**Do** usar cifras tabulares para toda hora, contador o número que se actualiza.",
+      "**Do** respetar `prefers-reduced-motion`: sin transiciones ni el fogonazo de cambio."
+    ],
+    "donts": [
+      "**Don't** usar un color de línea para comunicar estado, ni verde/ámbar/rojo de estado como identidad de una sección.",
+      "**Don't** pintar de verde las filas sanas del tablero; lo normal va en tinta.",
+      "**Don't** convertir los bloques en tarjetas con fondo, borde, esquina o sombra; la única sombra es la del aviso flotante.",
+      "**Don't** cargar fuentes web ni recursos externos.",
+      "**Don't** usar botones de esquina recta o intermedia; lo que se aprieta es cápsula.",
+      "**Don't** usar íconos de fuente, emoji o caracteres como íconos."
+    ]
+  }
+}
